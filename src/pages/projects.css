@@ -1,158 +1,164 @@
-/* src/pages/projects.css */
-
-/* --- VARIABLES --- */
+/* ================= ROOT ================= */
 :root {
-  --bg-page: #f8fafc;
-  --bg-white: #ffffff;
-  --text-main: #0f172a;
-  --text-muted: #6b7280;
-  --border-color: #e5e7eb;
-  --primary-blue: #4f46e5;
-  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.05);
+  --bg-main: #000000;
+  --card-bg: #000000;
+  --text-main: #ffffff;
+  --text-muted: #ffffff;
+  --border-color: rgba(255, 255, 255, 0.08);
 }
 
-/* --- PAGE WRAPPER (THE FIX) --- */
+/* ================= PAGE ================= */
 .projects-page {
-  /* 1. Use Fixed Positioning to ignore parent padding/margins completely */
   position: fixed;
   top: 0;
-  
-  /* 2. Start exactly where the sidebar ends */
-  left: 260px; 
-  
-  /* 3. Stretch to the right and bottom edges of the screen */
+  left: 260px;
   right: 0;
   bottom: 0;
-  
-  /* 4. Enable scrolling INSIDE this view */
   overflow-y: auto;
-  
-  /* 5. Styling */
-  background-color: var(--bg-page);
-  padding: 40px;
-  z-index: 10; /* Sits above the white gap, but below the sidebar (z-1000) */
+  background: var(--bg-main);
+  padding: 50px;
 }
 
+/* ================= HEADER ================= */
 .projects-header {
   margin-bottom: 32px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .page-title {
   font-size: 28px;
-  font-weight: 700;
-  color: #111827;
-}
-
-/* --- FILTERS CARD --- */
-.filters-card {
-  background: var(--bg-white);
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-card);
-  padding: 24px;
+  font-weight: 800;
   margin-bottom: 24px;
+  color: #ffffff;
+}
+
+/* ================= FILTERS ================= */
+.filters-card {
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 26px;
+  margin-bottom: 40px;
+  border: 1px solid var(--border-color);
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
-@media (min-width: 768px) {
-  .filters-card {
-    flex-direction: row;
-  }
-}
-
+/* WIDTH CONTROL */
 .search-container {
+  width: 40%;
   position: relative;
-  flex: 1;
 }
 
+.filter-select:nth-of-type(1) {
+  width: 30%;
+}
+
+.filter-select:nth-of-type(2) {
+  width: 30%;
+}
+
+/* ================= SEARCH ================= */
 .search-icon {
   position: absolute;
-  left: 12px;
+  left: 18px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--text-muted);
-  width: 16px;
-  height: 16px;
+  color: #ffffff;
 }
 
 .search-input {
   width: 100%;
-  height: 42px;
+  height: 56px;
+  border-radius: 14px;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding-left: 36px;
-  padding-right: 12px;
-  font-size: 14px;
-  color: var(--text-main);
-  background: #f9fafb;
+  background: #000000;
+  padding-left: 50px;
+  font-size: 15px;
+  color: #ffffff;
+}
+
+.search-input::placeholder {
+  color: #ffffff;
+  opacity: 0.6;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: var(--primary-blue);
-  background: #ffffff;
+  border: 1px solid rgba(255,255,255,0.3);
 }
 
+/* ================= SELECT ================= */
 .filter-select {
-  height: 42px;
+  height: 56px;
+  border-radius: 14px;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0 12px;
-  font-size: 14px;
-  color: var(--text-main);
-  background-color: #f9fafb;
+  background: #000000;
+  padding: 0 18px;
+  font-size: 15px;
+  color: #ffffff;
   cursor: pointer;
-  min-width: 180px;
 }
 
-/* --- TABLE CARD --- */
+.filter-select option {
+  background: #000000;
+  color: #ffffff;
+}
+
+/* ================= TABLE CARD ================= */
 .table-card {
-  background: var(--bg-white);
+  background: var(--card-bg);
+  border-radius: 24px;
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: var(--shadow-card);
   overflow: hidden;
 }
 
+/* HEADER */
 .table-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--border-color);
+  padding: 30px 32px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #ffffff;
+  border-bottom: 1px solid var(--border-color);
+  background: transparent;
 }
 
 .table-header-title {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
-  color: var(--text-main);
+  color: #ffffff;
 }
 
+/* ================= ADVANCED FILTER BUTTON ================= */
 .btn-outline {
-  background: #ffffff;
-  border: 1px solid var(--border-color);
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  color: var(--text-main);
-  font-weight: 600;
-  cursor: pointer;
+  background: #000000;
+  border: 2px solid #ffffff; 
+  padding: 12px 22px;
+  border-radius: 12px;
+  
+  /* CHANGE: Set to 400 or 500 for normal (not bold) letters */
+  font-weight: 400; 
+  
+  font-size: 14px;
+  color: #ffffff;
   display: flex;
   align-items: center;
   gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
+/* Fix: Background stays black, letters stay white and normal weight on hover */
 .btn-outline:hover {
-  background-color: #f3f4f6;
+  background: #000000 !important;
+  color: #ffffff !important;
+  font-weight: 400 !important; /* Ensures it doesn't flip to bold on hover */
+  border-color: #ffffff;
 }
 
-/* --- DATA TABLE --- */
+.btn-outline:hover svg {
+  color: #ffffff !important;
+}
+
+/* ================= TABLE ================= */
 .projects-table-wrapper {
   overflow-x: auto;
 }
@@ -160,141 +166,101 @@
 .projects-table {
   width: 100%;
   border-collapse: collapse;
-  text-align: left;
-  font-size: 14px;
 }
 
 .projects-table thead th {
-  background-color: #f9fafb;
-  color: var(--text-muted);
-  font-weight: 600;
   font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
   text-transform: uppercase;
-  padding: 12px 24px;
+  padding: 20px 32px;
   border-bottom: 1px solid var(--border-color);
-}
-
-.projects-table tbody tr {
-  border-bottom: 1px solid var(--border-color);
-  transition: background-color 0.2s;
-}
-
-.projects-table tbody tr:hover {
-  background-color: #f9fafb;
 }
 
 .projects-table td {
-  padding: 16px 24px;
-  color: var(--text-main);
+  padding: 26px 32px;
+  font-size: 14px;
+  color: #ffffff;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
   vertical-align: middle;
+}
+
+.projects-table tbody tr:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+/* META */
+.project-meta {
+  font-size: 12px;
+  color: #ffffff;
+  opacity: 0.8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
 }
 
 .project-id {
   font-family: monospace;
-  color: var(--text-muted);
-  font-weight: 500;
+  color: #ffffff;
 }
 
 .project-name {
   font-weight: 600;
-  color: var(--text-main);
+  color: #ffffff;
 }
 
-.project-meta {
-  font-size: 12px;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 4px;
-}
-
-/* --- BADGES & STATUS --- */
 .badge-industry {
-  display: inline-block;
   padding: 4px 10px;
   border-radius: 20px;
   font-size: 12px;
-  font-weight: 600;
-  background-color: #f3f4f6;
-  color: #4b5563;
-  border: 1px solid #e5e7eb;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: transparent;
+  color: #ffffff;
 }
 
+/* REMOVE STATUS COLORS */
 .status-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  color: #ffffff;
+  font-size: 14px;
   font-weight: 500;
-  font-size: 13px;
 }
 
 .status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  display: none;
 }
 
-.bg-green { background-color: #10b981; }
-.bg-blue { background-color: #3b82f6; }
-.bg-yellow { background-color: #f59e0b; }
-.bg-gray { background-color: #6b7280; }
-.bg-orange { background-color: #f97316; }
-
-/* --- PROGRESS BAR --- */
-.progress-wrapper {
-  min-width: 100px;
-}
-.progress-text {
-  font-size: 12px;
-  text-align: right;
-  margin-bottom: 4px;
-  color: var(--text-muted);
-  font-weight: 600;
-}
-.progress-track {
-  height: 8px;
-  background-color: #f3f4f6;
-  border-radius: 4px;
-  overflow: hidden;
-}
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #4f46e5, #818cf8);
-  border-radius: 4px;
-}
-
-/* --- ACTION MENU --- */
+/* ================= ACTION BUTTON ================= */
 .action-cell {
   position: relative;
   text-align: right;
 }
 
 .btn-icon {
-  background: none;
-  border: none;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 6px;
+  color: #ffffff;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  color: var(--text-muted);
 }
 
 .btn-icon:hover {
-  background-color: #f3f4f6;
-  color: var(--primary-blue);
+  background: #000000;
 }
 
+/* ================= DROPDOWN (ACTIONS + ADVANCED) ================= */
 .menu-dropdown {
   position: absolute;
-  right: 40px;
-  top: 10px;
-  width: 180px;
-  background-color: #ffffff;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  z-index: 50;
-  padding: 4px;
+  right: 0;
+  top: 45px;
+  width: 200px;
+  background: #000000;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+  z-index: 100;
+  padding: 6px;
   text-align: left;
 }
 
@@ -303,23 +269,23 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
-  font-size: 13px;
+  padding: 12px 14px;
+  font-size: 14px;
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--text-main);
-  border-radius: 4px;
+  color: #ffffff;
+  border-radius: 6px;
 }
 
 .menu-item:hover {
-  background-color: #f3f4f6;
+  background: #000000;
 }
 
 .menu-item.danger {
-  color: #dc2626;
+  color: #ff4d4f;
 }
 
 .menu-item.danger:hover {
-  background-color: #fef2f2;
+  background: #000000;
 }

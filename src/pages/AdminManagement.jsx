@@ -1,412 +1,630 @@
-import React, { useState, useMemo } from 'react';
-import './adminManagement.css';
+import React, { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { 
+  Search, Plus, MoreVertical, X, Clock, 
+  Check, ChevronDown, Eye, EyeOff 
+} from "lucide-react";
+import "./adminManagement.css";
 
-// --- ICONS (Added Download, Trash, Sort, Chevron) ---
-const IconSearch = () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>;
-const IconPlus = () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>;
-const IconMore = () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>;
-const IconX = () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>;
-const IconShield = () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
-const IconDownload = () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
-const IconTrash = () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>;
-const IconSort = () => <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M7 15l5 5 5-5M7 9l5-5 5 5"/></svg>;
-const IconChevronLeft = () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>;
-const IconChevronRight = () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>;
+const BASE_URL = "https://api-db-67gt.onrender.com";
 
-const AdminManagement = () => {
-  // --- STATE ---
-  // Expanded Mock Data
-  const [admins, setAdmins] = useState([
-    { id: 1, name: 'Alice Walker', email: 'alice@akin.com', role: 'Senior Admin', users: 8, maxUsers: 10, status: 'Active', lastLogin: '2 mins ago' },
-    { id: 2, name: 'Bob Martin', email: 'bob@akin.com', role: 'Admin', users: 2, maxUsers: 10, status: 'Inactive', lastLogin: '4 days ago' },
-    { id: 3, name: 'Charlie Davis', email: 'charlie@akin.com', role: 'Admin', users: 10, maxUsers: 10, status: 'Active', lastLogin: '1 hour ago' },
-    { id: 4, name: 'Diana Prince', email: 'diana@akin.com', role: 'Viewer', users: 0, maxUsers: 5, status: 'Active', lastLogin: 'Yesterday' },
-    { id: 5, name: 'Evan Wright', email: 'evan@akin.com', role: 'Admin', users: 5, maxUsers: 10, status: 'Suspended', lastLogin: '1 month ago' },
-    { id: 6, name: 'Fiona Green', email: 'fiona@akin.com', role: 'Admin', users: 1, maxUsers: 10, status: 'Active', lastLogin: '30 mins ago' },
-  ]);
-
-  const [selectedAdmin, setSelectedAdmin] = useState(null); 
-  const [showModal, setShowModal] = useState(false);
-  const [toast, setToast] = useState(null); // { message, type }
-
-  // Sorting, Filtering & Pagination State
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('All');
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+export default function AdminManagement() {
+  const navigate = useNavigate();
   
-  // Bulk Selection State
-  const [selectedRowIds, setSelectedRowIds] = useState([]);
+  // DATA STATES
+  const [admins, setAdmins] = useState([]);
+  const [dynamicProjects, setDynamicProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // --- LOGIC ---
+  // UI STATES
+  const [selectedAdmin, setSelectedAdmin] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [showProjectDropdown, setShowProjectDropdown] = useState(false);
+  const [selectedProjects, setSelectedProjects] = useState([]);
+  const [addNewMenuOpen, setAddNewMenuOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  
+  // FORM STATE
+  const [formData, setFormData] = useState({
+    client_name: "",
+    user_name: "", 
+    pilot_name: "",
+    email_id: "",
+    password: "",
+    contact_number: "",
+    drone_category: "",
+    small_license_id: "",
+    medium_license_id: "",
+    license_number: "",
+    client_code: "",
+    role: "user"
+  });
 
-  // 1. Show Notification Toast
-  const showToast = (message, type = 'success') => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState("All");
+
+  const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  // 2. Filter & Sort Logic
-  const filteredAdmins = useMemo(() => {
-    let data = [...admins];
-
-    // Search
-    if (searchTerm) {
-      data = data.filter(a => 
-        a.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        a.email.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Role Filter
-    if (roleFilter !== 'All') {
-      data = data.filter(a => a.role === roleFilter);
-    }
-
-    // Sorting
-    if (sortConfig.key) {
-      data.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
-    return data;
-  }, [admins, searchTerm, roleFilter, sortConfig]);
-
-  // 3. Pagination Logic
-  const totalPages = Math.ceil(filteredAdmins.length / itemsPerPage);
-  const paginatedAdmins = filteredAdmins.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // --- HANDLERS ---
-
-  const handleSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
+  const capitalizeFirst = (value) => {
+    if (!value) return "";
+    return value.charAt(0).toUpperCase() + value.slice(1);
   };
 
-  const handleBulkSelect = (id) => {
-    setSelectedRowIds(prev => 
-      prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
+  /* ================= FETCH DATA ================= */
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        if (!token) { navigate("/"); return; }
+
+        const headers = {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        };
+
+        const [adminRes, projectRes] = await Promise.all([
+          fetch(`${BASE_URL}/admins/`, { headers }),
+          fetch(`${BASE_URL}/projects/`, { headers })
+        ]);
+
+        if (adminRes.status === 401) { navigate("/"); return; }
+        
+        const adminData = await adminRes.json();
+        const projectData = await projectRes.json();
+
+        const normalizedAdmins = adminData.map((item) => ({
+          id: item.client_code || item._id,
+          name: item.client_name || "Unknown",
+          email: item.email_id || "N/A",
+          role: item.role ? item.role.charAt(0).toUpperCase() + item.role.slice(1) : "User",
+          status: item.status || "Active",
+          created_at: item.created_at ? new Date(item.created_at).toLocaleDateString() : "N/A"
+        }));
+
+        const normalizedProjects = projectData.map((p) => ({
+          id: p.project_code || p._id || p.id,
+          name: p.project_name || p.name
+        }));
+
+        setAdmins(normalizedAdmins);
+        setDynamicProjects(normalizedProjects);
+        setLoading(false);
+      } catch (err) {
+        console.error("API Error:", err);
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [navigate]);
+
+  /* ================= HANDLERS ================= */
+  const handleAddNewClick = () => {
+    setAddNewMenuOpen((prev) => !prev);
+  };
+
+  const handleRoleSelect = (role) => {
+    setSelectedRole(role);
+    setFormData({
+      client_name: "",
+      pilot_name: "",
+      email_id: "",
+      password: "",
+      contact_number: "",
+      license_number: "",
+      client_code: "",
+      drone_category: "",
+      small_license_id: "",
+      medium_license_id: "",
+      role: role === "Admin" ? "admin" : role === "Pilot" ? "pilot" : "user"
+    });
+    setSelectedProjects([]);
+    setShowPassword(false);
+    setShowModal(true);
+    setAddNewMenuOpen(false);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedRole(null);
+    setShowPassword(false);
+  };
+
+  const handleSubmitForm = async (e) => {
+    e.preventDefault();
+    console.log("Form submit called for role:", selectedRole);
+    
+    try {
+      const token = localStorage.getItem("access_token");
+      let endpoint = "";
+      let payload = {};
+      let successMessage = "";
+      
+      // Handle Admin registration via API
+      if (selectedRole === "Admin") {
+        endpoint = `${BASE_URL}/admins/register`;
+        payload = {
+          name: formData.client_name,
+          email: formData.email_id,
+          password: formData.password,
+          contact_number: formData.contact_number,
+          role: "admin"
+        };
+        successMessage = "Admin registered successfully";
+      } 
+      // Handle User registration via API
+      else if (selectedRole === "User") {
+        endpoint = `${BASE_URL}/users/register`;
+        payload = {
+          client_name: formData.client_name,
+          user_name: formData.user_name,
+          email: formData.email_id,
+          password: formData.password,
+          contact_number: formData.contact_number,
+          role: "user"
+        };
+        successMessage = "User registered successfully";
+      }
+      // Handle Pilot registration via API
+      else if (selectedRole === "Pilot") {
+        endpoint = `${BASE_URL}/register-pilot`;
+        payload = {
+          client_name: formData.client_name,
+          pilot_name: formData.pilot_name,
+          email_id: formData.email_id,
+          password: formData.password,
+          contact_number: formData.contact_number,
+          drone_category: formData.drone_category,
+          license_number: formData.license_number,
+        };
+        
+        // Add license IDs based on drone category
+        if (formData.drone_category === "Small") {
+          payload.small_license_id = formData.small_license_id;
+        } else if (formData.drone_category === "Medium") {
+          payload.medium_license_id = formData.medium_license_id;
+        } else if (formData.drone_category === "Hybrid") {
+          payload.small_license_id = formData.small_license_id;
+          payload.medium_license_id = formData.medium_license_id;
+        }
+        successMessage = "Pilot registered successfully";
+      }
+      
+      if (endpoint) {
+        console.log("Sending registration to:", endpoint, "Payload:", payload);
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        console.log("Response status:", response.status, "OK:", response.ok);
+        
+        if (response.ok) {
+          console.log("Registration successful");
+          alert(successMessage);
+          setShowModal(false);
+          setShowPassword(false);
+          setFormData({
+            client_name: "",
+            user_name: "",
+            pilot_name: "",
+            email_id: "",
+            password: "",
+            contact_number: "",
+            drone_category: "",
+            small_license_id: "",
+            medium_license_id: "",
+            license_number: "",
+            client_code: "",
+            role: "user"
+          });
+          // Refresh data
+          const adminRes = await fetch(`${BASE_URL}/admins/`, {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (adminRes.ok) {
+            const adminData = await adminRes.json();
+            const normalizedAdmins = adminData.map((item) => ({
+              id: item.client_code || item._id,
+              name: item.client_name || "Unknown",
+              email: item.email_id || "N/A",
+              role: item.role ? item.role.charAt(0).toUpperCase() + item.role.slice(1) : "User",
+              status: item.status || "Active",
+              created_at: item.created_at ? new Date(item.created_at).toLocaleDateString() : "N/A"
+            }));
+            setAdmins(normalizedAdmins);
+          }
+        } else {
+          try {
+            const errorData = await response.json();
+            console.error(`${selectedRole} registration error:`, errorData);
+            alert(errorData.message || `Failed to register ${selectedRole}. Please try again.`);
+          } catch (parseErr) {
+            console.error("Error parsing response:", parseErr);
+            alert(`Failed to register ${selectedRole}. Please try again.`);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Registration error:", err);
+      alert(`Error registering ${selectedRole}. Please try again.`);
+    }
+  };
+
+  const handleSelectProject = (project) => {
+    setSelectedProjects((prev) =>
+      prev.find((p) => p.id === project.id)
+        ? prev.filter((p) => p.id !== project.id)
+        : [...prev, project]
     );
   };
 
-  const handleSelectAll = () => {
-    if (selectedRowIds.length === paginatedAdmins.length) {
-      setSelectedRowIds([]);
-    } else {
-      setSelectedRowIds(paginatedAdmins.map(a => a.id));
-    }
-  };
+  const filteredAdmins = useMemo(() => {
+    return admins.filter((a) => {
+      const matchesSearch = 
+        a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        a.email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesRole = roleFilter === "All" || a.role === roleFilter;
+      return matchesSearch && matchesRole;
+    });
+  }, [admins, searchTerm, roleFilter]);
 
-  const handleDeleteSelected = () => {
-    if (window.confirm(`Delete ${selectedRowIds.length} admins?`)) {
-      setAdmins(prev => prev.filter(a => !selectedRowIds.includes(a.id)));
-      setSelectedRowIds([]);
-      showToast('Selected admins deleted successfully', 'error');
-    }
-  };
-
-  const handleExportCSV = () => {
-    const headers = ["ID,Name,Email,Role,Status,Users Used"];
-    const rows = admins.map(a => `${a.id},${a.name},${a.email},${a.role},${a.status},${a.users}`);
-    const csvContent = "data:text/csv;charset=utf-8," + headers.concat(rows).join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "admins_export.csv");
-    document.body.appendChild(link);
-    link.click();
-    showToast('Data exported successfully');
-  };
+  if (loading) return (
+    <div className="admin-page">
+      <div className="status-loader">Fetching Database Records...</div>
+    </div>
+  );
 
   return (
     <div className="admin-page">
-      {/* --- TOAST NOTIFICATION --- */}
-      {toast && (
-        <div className={`toast-notification ${toast.type}`}>
-          {toast.message}
-        </div>
-      )}
+      {toast && <div className={`toast-notification ${toast.type}`}>{toast.message}</div>}
 
-      {/* --- PAGE HEADER --- */}
       <div className="page-header">
         <div>
           <h1 className="title">Admin Management</h1>
-          <p className="subtitle">Oversee admin access, monitor quotas, and audit activity.</p>
         </div>
         <div className="header-actions">
-          <button className="btn-outline" onClick={handleExportCSV}>
-            <IconDownload /> <span>Export</span>
+          <button className="btn-create" onClick={handleAddNewClick}>
+            <Plus size={18} />  Add New
           </button>
-          <button className="btn-create" onClick={() => setShowModal(true)}>
-            <IconPlus /> <span>New Admin</span>
-          </button>
+          {addNewMenuOpen && (
+            <div className="add-new-menu">
+              <button type="button" onClick={() => handleRoleSelect("Admin")}>Admin</button>
+              <button type="button" onClick={() => handleRoleSelect("User")}>User</button>
+              <button type="button" onClick={() => handleRoleSelect("Pilot")}>Pilot</button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* --- KPI CARDS (UNCHANGED) --- */}
-      <div className="kpi-grid">
-        <div className="kpi-card">
-          <div className="kpi-icon blue"><IconShield /></div>
-          <div><div className="kpi-value">{admins.length}</div><div className="kpi-label">Total Admins</div></div>
+      <div className="toolbar">
+        <div className="search-box">
+          <Search size={18} />
+          <input
+            placeholder="Search users..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
-        <div className="kpi-card">
-          <div className="kpi-icon green"><span style={{fontWeight:'800'}}>%</span></div>
-          <div><div className="kpi-value">98%</div><div className="kpi-label">System Health</div></div>
-        </div>
-        <div className="kpi-card">
-          <div className="kpi-icon orange"><span style={{fontWeight:'800'}}>!</span></div>
-          <div><div className="kpi-value">{admins.filter(a => a.users >= a.maxUsers).length}</div><div className="kpi-label">Limit Reached</div></div>
-        </div>
+
+        <select 
+          className="role-select" 
+          value={roleFilter} 
+          onChange={(e) => setRoleFilter(e.target.value)}
+        >
+          <option value="All">All Roles</option>
+          <option value="Admin">Admin</option>
+          <option value="User">User</option>
+          <option value="Pilot">Pilot</option>
+        </select>
       </div>
 
-      {/* --- MAIN CONTENT CARD --- */}
       <div className="content-card">
-        {/* Toolbar */}
-        <div className="toolbar">
-          <div className="search-box">
-            <IconSearch />
-            <input 
-              type="text" 
-              placeholder="Search by name or email..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          
-          <div className="filters">
-             {selectedRowIds.length > 0 && (
-               <button className="btn-bulk-delete" onClick={handleDeleteSelected}>
-                 <IconTrash /> Delete ({selectedRowIds.length})
-               </button>
-             )}
-            <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
-              <option value="All">All Roles</option>
-              <option value="Senior Admin">Senior Admin</option>
-              <option value="Admin">Admin</option>
-              <option value="Viewer">Viewer</option>
-            </select>
-          </div>
-        </div>
+        <table className="modern-table">
+          <thead>
+  <tr>
+    <th>CLIENT</th>
+    <th>CLIENT CODE</th>
+    <th>EMAIL</th>
+    <th>SYSTEM ROLE</th>
+    <th>STATUS</th>
+    <th>CREATED ON</th>
+    <th style={{ textAlign: "right" }}>ACTIONS</th>
+  </tr>
+</thead>
+          <tbody>
+            {filteredAdmins.map((admin) => (
+              <tr key={admin.id}>
+                <td>{admin.name}</td>
 
-        {/* Rich Table */}
-        <div className="table-responsive">
-          <table className="modern-table">
-            <thead>
-              <tr>
-                <th style={{width: '40px'}}>
-                  <input 
-                    type="checkbox" 
-                    onChange={handleSelectAll} 
-                    checked={selectedRowIds.length === paginatedAdmins.length && paginatedAdmins.length > 0} 
-                  />
-                </th>
-                <th onClick={() => handleSort('name')} className="sortable">
-                  Admin Profile <IconSort />
-                </th>
-                <th onClick={() => handleSort('role')} className="sortable">
-                  Access Level <IconSort />
-                </th>
-                <th onClick={() => handleSort('users')} className="sortable">
-                  Quota Usage <IconSort />
-                </th>
-                <th onClick={() => handleSort('status')} className="sortable">
-                  Status <IconSort />
-                </th>
-                <th>Last Active</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedAdmins.map((admin) => (
-                <tr key={admin.id} className={selectedRowIds.includes(admin.id) ? 'row-selected' : ''}>
-                  <td>
-                    <input 
-                      type="checkbox" 
-                      checked={selectedRowIds.includes(admin.id)} 
-                      onChange={() => handleBulkSelect(admin.id)}
-                    />
-                  </td>
-                  <td onClick={() => setSelectedAdmin(admin)} style={{cursor: 'pointer'}}>
-                    <div className="profile-cell">
-                      <div className="avatar">{admin.name.charAt(0)}</div>
-                      <div className="info">
-                        <span className="name">{admin.name}</span>
-                        <span className="email">{admin.email}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td><span className={`role-pill ${admin.role.toLowerCase().replace(' ', '-')}`}>{admin.role}</span></td>
-                  <td>
-                    <div className="quota-cell">
-                      <div className="quota-text">
-                        <span style={{color: admin.users >= admin.maxUsers ? '#ef4444' : '#4f46e5'}}>{admin.users}</span> / {admin.maxUsers}
-                      </div>
-                      <div className="progress-bar">
-                        <div 
-                          className="fill" 
-                          style={{ 
-                            width: `${(admin.users / admin.maxUsers) * 100}%`,
-                            background: admin.users >= admin.maxUsers ? '#ef4444' : '#4f46e5'
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className={`status-dot-wrapper ${admin.status.toLowerCase()}`}>
-                      <div className="dot"></div>
-                      <span>{admin.status}</span>
-                    </div>
-                  </td>
-                  <td className="text-muted">{admin.lastLogin}</td>
-                  <td className="action-cell">
-                    <button className="btn-icon" onClick={() => setSelectedAdmin(admin)}><IconMore /></button>
-                  </td>
-                </tr>
-              ))}
-              {paginatedAdmins.length === 0 && (
-                <tr>
-                  <td colSpan="7" style={{textAlign: 'center', padding: '2rem'}}>No admins found matching your filters.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+<td>{admin.id}</td>
 
-        {/* Pagination Controls */}
-        <div className="pagination-footer">
-          <span className="pagination-info">
-            Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filteredAdmins.length)} to {Math.min(currentPage * itemsPerPage, filteredAdmins.length)} of {filteredAdmins.length}
-          </span>
-          <div className="pagination-btns">
-            <button 
-              disabled={currentPage === 1} 
-              onClick={() => setCurrentPage(prev => prev - 1)}
-            >
-              <IconChevronLeft />
-            </button>
-            {Array.from({length: totalPages}, (_, i) => i + 1).map(num => (
-               <button 
-                 key={num} 
-                 className={currentPage === num ? 'active' : ''}
-                 onClick={() => setCurrentPage(num)}
-               >
-                 {num}
-               </button>
-            ))}
-            <button 
-              disabled={currentPage === totalPages} 
-              onClick={() => setCurrentPage(prev => prev + 1)}
-            >
-              <IconChevronRight />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* --- DETAIL DRAWER (SLIDE OVER) --- */}
-      <div className={`drawer-backdrop ${selectedAdmin ? 'open' : ''}`} onClick={() => setSelectedAdmin(null)}></div>
-      <div className={`detail-drawer ${selectedAdmin ? 'open' : ''}`}>
-        {selectedAdmin && (
-          <>
-            <div className="drawer-header">
-              <h3>Admin Details</h3>
-              <button className="btn-close" onClick={() => setSelectedAdmin(null)}><IconX /></button>
-            </div>
-            
-            <div className="drawer-body">
-              <div className="drawer-profile">
-                <div className="big-avatar">{selectedAdmin.name.charAt(0)}</div>
-                <h2>{selectedAdmin.name}</h2>
-                <p>{selectedAdmin.email}</p>
-                <div className="drawer-actions">
-                  <button className="btn-secondary" onClick={() => showToast('Password reset email sent')}>Reset Pass</button>
-                  <button className="btn-danger" onClick={() => {
-                    setAdmins(prev => prev.filter(a => a.id !== selectedAdmin.id));
-                    setSelectedAdmin(null);
-                    showToast('Admin deleted', 'error');
-                  }}>
-                    Delete Admin
+<td>{admin.email}</td>
+                <td><span className={`role-badge ${admin.role.toLowerCase()}`}>{admin.role}</span></td>
+                <td>
+                  <div className="status-container">
+                    <span className="status-indicator active"></span>
+                    {admin.status}
+                  </div>
+                </td>
+                <td>
+                  <div className="login-time" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Clock size={14} /> {admin.created_at}
+                  </div>
+                </td>
+                <td style={{ textAlign: "right" }}>
+                  <button className="btn-icon" onClick={() => setSelectedAdmin(admin)}>
+                    <MoreVertical size={18} />
                   </button>
-                </div>
-              </div>
-
-              <div className="drawer-section">
-                <h4>Access Control</h4>
-                <div className="info-row">
-                  <label>Status</label>
-                  <select 
-                    value={selectedAdmin.status} 
-                    onChange={(e) => {
-                      // Update admin status logic
-                      const updated = {...selectedAdmin, status: e.target.value};
-                      setAdmins(prev => prev.map(a => a.id === updated.id ? updated : a));
-                      setSelectedAdmin(updated);
-                      showToast(`Status updated to ${e.target.value}`);
-                    }}
-                  >
-                    <option>Active</option>
-                    <option>Inactive</option>
-                    <option>Suspended</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="drawer-section">
-                <h4>Quotas</h4>
-                <div className="quota-card">
-                  <span>Users Created</span>
-                  <strong>{selectedAdmin.users} / {selectedAdmin.maxUsers}</strong>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {/* --- MODAL FOR CREATE --- */}
+      {/* NEW ADMIN MODAL */}
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2>Add New Admin</h2>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.target);
-              const newAdmin = {
-                id: Date.now(),
-                name: formData.get('name'),
-                email: formData.get('email'),
-                role: 'Admin',
-                users: 0,
-                maxUsers: 10,
-                status: 'Active',
-                lastLogin: 'Never'
-              };
-              setAdmins([newAdmin, ...admins]);
-              setShowModal(false);
-              showToast('New admin created successfully');
-            }}>
-              <div className="form-row"><label>Name</label><input name="name" type="text" required /></div>
-              <div className="form-row"><label>Email</label><input name="email" type="email" required /></div>
-              <div className="modal-btns">
-                <button type="button" className="btn-cancel" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn-confirm">Create</button>
+        <div className="modal-overlay" onClick={handleCloseModal}>
+          <div className="modal-content admin-card-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="btn-close-x" onClick={handleCloseModal}>
+              <X size={20} />
+            </button>
+
+            <h2>REGISTER NEW {selectedRole ? selectedRole.toUpperCase() : "USER"}</h2>
+
+            {selectedRole === "Annotator" ? (
+              <div className="annotator-note">
+                <p>Annotator registration is not available in this version yet.</p>
+                <button type="button" className="btn-confirm-blue" onClick={handleCloseModal}>
+                  Close
+                </button>
               </div>
-            </form>
+            ) : (
+              <form className="modal-form" onSubmit={handleSubmitForm}>
+                {selectedRole === "Admin" && (
+                  <div className="form-row">
+                    <label>Client Name <span className="required">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="Enter client name"
+                      value={formData.client_name}
+                      onChange={(e) => setFormData({ ...formData, client_name: capitalizeFirst(e.target.value) })}
+                      required
+                    />
+                  </div>
+                )}
+
+                {selectedRole === "User" && (
+  <>
+    <div className="form-row">
+      <label>Client Name <span className="required">*</span></label>
+      <input
+        type="text"
+        placeholder="Enter client name"
+        value={formData.client_name}
+        onChange={(e) =>
+          setFormData({
+            ...formData,
+            client_name: capitalizeFirst(e.target.value)
+          })
+        }
+        required
+      />
+    </div>
+
+    <div className="form-row">
+      <label>User Name <span className="required">*</span></label>
+      <input
+        type="text"
+        placeholder="Enter user name"
+        value={formData.user_name}
+        onChange={(e) =>
+          setFormData({
+            ...formData,
+            user_name: capitalizeFirst(e.target.value)
+          })
+        }
+        required
+      />
+    </div>
+  </>
+)}
+
+                {selectedRole === "Pilot" && (
+  <>
+    <div className="form-row">
+      <label>Client Name <span className="required">*</span></label>
+      <input
+        type="text"
+        placeholder="Enter client name"
+        value={formData.client_name}
+        onChange={(e) =>
+          setFormData({
+            ...formData,
+            client_name: capitalizeFirst(e.target.value)
+          })
+        }
+        required
+      />
+    </div>
+
+    <div className="form-row">
+      <label>Pilot Name <span className="required">*</span></label>
+      <input
+        type="text"
+        placeholder="Enter pilot name"
+        value={formData.pilot_name}
+        onChange={(e) =>
+          setFormData({
+            ...formData,
+            pilot_name: capitalizeFirst(e.target.value)
+          })
+        }
+        required
+      />
+    </div>
+
+    <div className="form-row">
+      <label>Drone Category <span className="required">*</span></label>
+      <select
+        value={formData.drone_category}
+        onChange={(e) =>
+          setFormData({
+            ...formData,
+            drone_category: e.target.value,
+            small_license_id: "",
+            medium_license_id: ""
+          })
+        }
+        required
+      >
+        <option value="">Select Drone Category</option>
+        <option value="Small">Small</option>
+        <option value="Medium">Medium</option>
+        <option value="Hybrid">Hybrid</option>
+      </select>
+    </div>
+
+    {formData.drone_category === "Small" && (
+      <div className="form-row">
+        <label>Enter Small License ID <span className="required">*</span></label>
+        <input
+          type="text"
+          placeholder="Enter small license ID"
+          value={formData.small_license_id}
+          onChange={(e) => setFormData({ ...formData, small_license_id: e.target.value })}
+          required
+        />
+      </div>
+    )}
+
+    {formData.drone_category === "Medium" && (
+      <div className="form-row">
+        <label>Enter Medium License ID <span className="required">*</span></label>
+        <input
+          type="text"
+          placeholder="Enter medium license ID"
+          value={formData.medium_license_id}
+          onChange={(e) => setFormData({ ...formData, medium_license_id: e.target.value })}
+          required
+        />
+      </div>
+    )}
+
+    {formData.drone_category === "Hybrid" && (
+      <>
+        <div className="form-row">
+          <label>Enter Small License ID <span className="required">*</span></label>
+          <input
+            type="text"
+            placeholder="Enter small license ID"
+            value={formData.small_license_id}
+            onChange={(e) => setFormData({ ...formData, small_license_id: e.target.value })}
+            required
+          />
+        </div>
+        <div className="form-row">
+          <label>Enter Medium License ID <span className="required">*</span></label>
+          <input
+            type="text"
+            placeholder="Enter medium license ID"
+            value={formData.medium_license_id}
+            onChange={(e) => setFormData({ ...formData, medium_license_id: e.target.value })}
+            required
+          />
+        </div>
+      </>
+    )}
+
+    <div className="form-row">
+      <label>License Number <span className="required">*</span></label>
+      <input
+        type="text"
+        placeholder="Enter license number"
+        value={formData.license_number}
+        onChange={(e) => setFormData({ ...formData, license_number: e.target.value })}
+        required
+      />
+    </div>
+
+    <div className="form-row">
+      <label>Contact Number <span className="required">*</span></label>
+      <input
+        type="text"
+        placeholder="Enter contact number"
+        value={formData.contact_number}
+        onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })}
+        required
+      />
+    </div>
+  </>
+)}
+
+                <div className="form-row">
+                  <label>Email <span className="required">*</span></label>
+                  <input
+                    type="email"
+                    placeholder="email@example.com"
+                    value={formData.email_id}
+                    onChange={(e) => setFormData({ ...formData, email_id: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="form-row">
+                  <label>Password <span className="required">*</span></label>
+                  <div className="password-input-container">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      required
+                    />
+                    <span
+                      className="eye-toggle"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </span>
+                  </div>
+                </div>
+
+                <button type="submit" className="btn-confirm-blue">SUBMIT</button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* DETAIL DRAWER */}
+      {selectedAdmin && (
+        <div className="detail-drawer open">
+          <div className="drawer-header">
+              <h2>USER DETAILS</h2>
+              <button onClick={() => setSelectedAdmin(null)} className="btn-close-modal"><X /></button>
+          </div>
+          <div className="drawer-body">
+              <div className="profile-avatar">
+                {selectedAdmin.name.charAt(0)}
+              </div>
+              <h3>{selectedAdmin.name}</h3>
+              <p style={{ color: '#a1a1aa' }}>{selectedAdmin.email}</p>
+              <div className="drawer-divider" />
+              <div className="drawer-item"><span>Role: </span><strong>{selectedAdmin.role}</strong></div>
+              <div className="drawer-item"><span>Code: </span><strong>{selectedAdmin.id}</strong></div>
           </div>
         </div>
       )}
     </div>
   );
-};
-
-export default AdminManagement;
+}

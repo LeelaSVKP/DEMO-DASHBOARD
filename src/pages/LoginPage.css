@@ -1,0 +1,13 @@
+.resend-otp-btn {
+    background-color: #10b981; /* Change to your desired color */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.resend-otp-btn:hover {
+    background-color: #0f9c6e; /* Darker shade on hover */
+}

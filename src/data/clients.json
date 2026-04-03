@@ -1,0 +1,24 @@
+{
+  "clients": [
+    {
+      "name": "AWS",
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg"
+    },
+    {
+      "name": "T-Hub",
+      "logo": "https://res.cloudinary.com/dateiqugp/image/upload/v1769578819/t-hub-logo-1_ri3iim.png"
+    },
+    {
+      "name": "Maruti Suzuki",
+      "logo": "https://res.cloudinary.com/dateiqugp/image/upload/v1769579064/download_nvfoea.jpg"
+    },
+    {
+      "name": "Jim Corbett National Park",
+      "logo": "https://res.cloudinary.com/detyndew1/image/upload/v1769578434/Untitled_design_2_g9z5cm.jpg"
+    },
+    {
+      "name": "Google Cloud",
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/5/51/Google_Cloud_logo.svg"
+    }
+  ]
+}

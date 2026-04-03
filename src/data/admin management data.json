@@ -1,0 +1,64 @@
+{
+  "admins": [
+    {
+      "id": 1,
+      "name": "Alice Walker",
+      "email": "alice@akin.com",
+      "role": "Senior Admin",
+      "users": 8,
+      "maxUsers": 10,
+      "status": "Active",
+      "lastLogin": "2 mins ago"
+    },
+    {
+      "id": 2,
+      "name": "Bob Martin",
+      "email": "bob@akin.com",
+      "role": "Admin",
+      "users": 2,
+      "maxUsers": 10,
+      "status": "Inactive",
+      "lastLogin": "4 days ago"
+    },
+    {
+      "id": 3,
+      "name": "Charlie Davis",
+      "email": "charlie@akin.com",
+      "role": "Admin",
+      "users": 10,
+      "maxUsers": 10,
+      "status": "Active",
+      "lastLogin": "1 hour ago"
+    },
+    {
+      "id": 4,
+      "name": "Diana Prince",
+      "email": "diana@akin.com",
+      "role": "Viewer",
+      "users": 0,
+      "maxUsers": 5,
+      "status": "Active",
+      "lastLogin": "Yesterday"
+    },
+    {
+      "id": 5,
+      "name": "Evan Wright",
+      "email": "evan@akin.com",
+      "role": "Admin",
+      "users": 5,
+      "maxUsers": 10,
+      "status": "Suspended",
+      "lastLogin": "1 month ago"
+    },
+    {
+      "id": 6,
+      "name": "Fiona Green",
+      "email": "fiona@akin.com",
+      "role": "Admin",
+      "users": 1,
+      "maxUsers": 10,
+      "status": "Active",
+      "lastLogin": "30 mins ago"
+    }
+  ]
+}

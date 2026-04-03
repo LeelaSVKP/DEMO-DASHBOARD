@@ -8,37 +8,87 @@
   right: 0;
   bottom: 0;
   overflow-y: auto;
-  background-color: #f8fafc; /* Light Theme Background */
+  background-color: #000000; /* Pure Black Background */
   padding: 30px;
   box-sizing: border-box;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  color: #0f172a;
+  color: #ffffff; /* Pure White Text */
 }
 
-/* --- 2. HEADER --- */
+/* --- 2. HEADER (Title Left, Buttons Right) --- */
 .analytics-header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
+  justify-content: space-between; /* Pushes content to opposite ends */
+  align-items: center;            /* Vertically centers title with buttons */
   margin-bottom: 30px;
-  border-bottom: 1px solid #e2e8f0;
-  padding-bottom: 20px;
+  border-bottom: 1px solid #333333; /* Dark border for black bg */
+  padding-bottom: 25px;
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
 }
 
 .page-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0 0 5px 0;
-}
-
-.page-desc {
-  color: #64748b;
-  font-size: 14px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #ffffff;
   margin: 0;
 }
 
-/* --- 3. TOGGLE BUTTONS (Lock/Unlock) --- */
+.page-desc {
+  color: #a1a1aa;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* --- 3. FILTER ROW & DROPDOWNS --- */
+.filter-row-container {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.filter-box {
+  position: relative;
+  flex: 1;
+}
+
+.filter-box select {
+  width: 100%;
+  height: 48px;
+  background-color: #000000;
+  color: #ffffff;
+  border: 1px solid #333333;
+  border-radius: 8px;
+  padding: 0 40px 0 15px;
+  font-size: 14px;
+  appearance: none; /* Removes default browser arrow */
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.filter-box select:focus {
+  outline: none;
+  border-color: #4f46e5;
+}
+
+.dropdown-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #666666;
+}
+
+/* --- 4. TOGGLE BUTTONS --- */
 .unlock-controls {
   display: flex;
   gap: 12px;
@@ -52,31 +102,34 @@
   cursor: pointer;
   border: none;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
+
+  /* FIX: Changed from fixed to relative so it scrolls with the header */
+  position: relative; 
+  bottom : 20px;
+  left : 400px;
+  z-index: 10;
 }
 
-/* State: UNLOCKED (Active/Green) */
 .btn-toggle.unlocked {
   background-color: #10b981;
   color: white;
 }
-.btn-toggle.unlocked:hover {
-  background-color: #059669;
-}
 
-/* State: LOCKED (Inactive/Red) */
 .btn-toggle.locked {
   background-color: #ef4444;
   color: white;
 }
-.btn-toggle.locked:hover {
-  background-color: #dc2626;
+
+.btn-toggle:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
-/* --- 4. LOCKED VIEW (Pipeline/Wait Card) --- */
+/* --- 5. LOCKED VIEW --- */
 .centered-view {
   display: flex;
   align-items: center;
@@ -85,106 +138,127 @@
 }
 
 .data-wait-card {
-  background: white;
+  background: #111111; /* Slightly lighter black for depth */
   padding: 40px;
   border-radius: 16px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #333333;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
   text-align: center;
   max-width: 500px;
   width: 100%;
 }
 
-.pulse-ring {
-  font-size: 40px;
-  margin-bottom: 20px;
-  display: inline-block;
-}
-
 .wait-title {
   font-size: 22px;
   font-weight: 700;
-  color: #111827;
+  color: #ffffff;
   margin-bottom: 10px;
 }
 
 .wait-desc {
-  color: #6b7280;
+  color: #d1d5db;
   font-size: 14px;
   line-height: 1.5;
   margin-bottom: 24px;
 }
 
-.status-badge {
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 11px;
-  text-transform: uppercase;
-  display: inline-block;
-}
-
 .btn-outline {
-  background: white;
-  border: 1px solid #d1d5db;
-  color: #374151;
+  background: transparent;
+  border: 1px solid #ffffff;
+  color: #ffffff;
   padding: 10px 24px;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
 .btn-outline:hover {
-  background: #f3f4f6;
+  background: #ffffff;
+  color: #000000;
 }
 
-/* --- 5. CHARTS GRID & CARDS --- */
+/* --- 6. CHARTS GRID --- */
 .charts-grid-container {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 24px;
   padding-bottom: 40px;
-}
-
-@media (max-width: 1200px) {
-  .charts-grid-container {
-    grid-template-columns: 1fr;
-  }
+  background-color: #000000;
 }
 
 .chart-card-light {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+  background-color: #000000; /* Pure Black Card */
+  border: 1px solid #333333; /* Dark border */
   border-radius: 12px;
   padding: 24px;
   height: 400px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
+  min-width: 0; /* Important for flex children */
 }
 
 .chart-title {
   font-size: 16px;
   font-weight: 700;
-  color: #1e293b;
+  color: #ffffff;
   margin-bottom: 24px;
+  flex-shrink: 0;
 }
 
-/* --- 6. LOADING / ERROR STATES --- */
+/* Wrapper for ResponsiveContainer to take remaining space */
+.chart-card-light > div {
+  flex: 1;
+  min-height: 0; /* Important for flex children with percentage heights */
+  position: relative;
+}
+
+/* --- 7. LOADING / EMPTY STATES --- */
+.status-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+  color: #a1a1aa;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+  color: #4f46e5;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.empty-notice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 120px 0;
+  color: #64748b;
+}
+
+.empty-notice h3 {
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
 .analytics-loading, .analytics-error {
   position: fixed;
   top: 0; left: 260px; right: 0; bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f8fafc;
-  color: #64748b;
+  background-color: #000000;
+  color: #ffffff;
   font-size: 18px;
   font-weight: 500;
   z-index: 10;
-}
-
-.analytics-error {
-  color: #ef4444;
 }

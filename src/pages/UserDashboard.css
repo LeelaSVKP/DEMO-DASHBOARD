@@ -1,0 +1,12 @@
+/* View Details Button */
+.view-details-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; padding: 12px;
+  background-color: #1e293b; color: #ffffff;
+  border: none; border-radius: 12px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+}
+
+.view-details-btn:hover { background-color: #0f172a; }
+
+/* ... (Keep all your existing CSS above this) ... */

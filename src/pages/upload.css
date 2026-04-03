@@ -1,240 +1,662 @@
-/* Align the label and percentage on one line */
-.progress-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 4px;
+/* --- THEME VARIABLES --- */
+:root {
+  --primary: #4f46e5;
+  --bg-pure-black: #000000;
+  --bg-input-dark: #09090b;
+  --text-main: #ffffff;
+  --text-muted: #a1a1aa;
+  --border-subtle: #27272a;
+  --white: #ffffff;
+  --red: #ef4444;
 }
 
-.progress-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #374151;
+/* --- GLOBAL STYLES --- */
+body {
+  background-color: var(--bg-pure-black);
+  color: var(--text-main);
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Make the percentage stand out */
-.progress-percentage {
-  font-size: 14px;
-  font-weight: 800;
-  color: #4f46e5;
-}
-
-.progress-container {
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-}
-
-.progress-bar-bg {
-  width: 100%;
-  height: 10px; /* Made slightly thicker for visibility */
-  background: #f3f4f6;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #4f46e5, #818cf8);
-  transition: width 0.3s ease-in-out;
-}
-
-/* Processing Timer UI */
-.cooldown-container {
+/* --- OVERLAY & WRAPPERS --- */
+.upload-overlay,
+.modal-overlay,
+.modal-wrapper {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  /* Deep black for focus */
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  background: #fffbeb;
-  border: 1px solid #fcd34d;
-  padding: 12px;
-  border-radius: 8px;
-  margin-top: 10px;
+  z-index: 9999;
+  backdrop-filter: blur(8px);
 }
 
-.timer-text {
-  font-size: 14px;
-  color: #92400e;
-  margin: 0;
-}
-
-.timer-spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid #fcd34d;
-  border-top-color: #92400e;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Ensure progress bar looks clean when finished */
-.progress-bar-fill {
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-
-
-
-/* Progress Bar Styles */
-.progress-container {
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.progress-bar-bg {
-  width: 100%;
-  height: 8px;
-  background: #f3f4f6;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #4f46e5, #818cf8);
-  transition: width 0.3s ease;
-}
-
-.progress-text {
-  font-size: 12px;
-  font-weight: 700;
-  color: #4f46e5;
-  text-align: right;
-}
-
-/* Status Message Styling */
-.status-msg {
-  padding: 12px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  text-align: center;
-  margin-top: 10px;
-}
-
-.status-msg.success { background: #ecfdf5; color: #059669; border: 1px solid #10b981; }
-.status-msg.error { background: #fef2f2; color: #dc2626; border: 1px solid #f87171; }
-
-/* src/pages/upload.css */
-/* Status Messages */
-.status-msg {
-  padding: 12px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  text-align: center;
-}
-
-.status-msg.success {
-  background: #ecfdf5;
-  color: #059669;
-  border: 1px solid #10b981;
-}
-
-.status-msg.error {
-  background: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #f87171;
-}
-/* Wrapper to ensure the container takes full available width */
-.page-wrapper {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  padding: 40px 20px;
+/* --- CONTAINERS (UPLOAD, CLIENT, & INLINE CARDS) --- */
+.upload-container,
+.client-card,
+.client-card-ui,
+.inline-client-card {
+  background: var(--bg-pure-black) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  position: relative;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.03);
 }
 
 .upload-container {
-  width: 100%;
-  max-width: 600px; /* Professional width for a dashboard card */
+  width: 900px;
+  padding: 32px;
+
+  max-height: 90vh;
+  /* 🔥 screen lo fit */
+  overflow-y: auto;
+  /* scroll inside */
+  overflow-x: hidden;
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
+
+  border-radius: 24px;
+  /* 🔥 smooth edges */
 }
 
-/* Header Text - Centered */
-.upload-header {
-  text-align: center;
-  margin-bottom: 32px;
+.upload-container::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for Chrome, Safari */
 }
 
-.page-title {
-  font-size: 28px;
+.client-card,
+.client-card-ui {
+  width: 480px;
+  padding: 40px;
+  border-radius: 24px;
+}
+
+.inline-client-card {
+  margin-top: 15px;
+  padding: 20px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* --- HEADINGS --- */
+.title,
+h1,
+h2,
+h3,
+.inline-card-header h3 {
+  color: var(--text-main) !important;
   font-weight: 700;
-  color: #111827;
+  margin: 0 0 10px 0;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  margin-bottom: 30px;
+  font-size: 14px;
+}
+
+/* --- FORM LAYOUT & LABELS --- */
+.form-grid,
+.upload-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-top: 20px;
+  margin-bottom: 32px;
+  /* 🔥 bottom breathing space */
+}
+
+.field-label,
+.label-row,
+.field label,
+.inline-card-body label,
+.upload-box label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--text-main) !important;
+  font-size: 14px;
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* --- INPUTS, SELECTS & DROPZONES --- */
+select,
+input,
+.input-field,
+.inline-card-body input,
+.client-card input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--bg-input-dark) !important;
+  border: 1px solid var(--border-subtle) !important;
+  color: var(--text-main) !important;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+input::placeholder {
+  color: #52525b;
+}
+
+.dropzone {
+  margin-top: 10px;
+  border: 2px dashed var(--border-subtle);
+  padding: 28px;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+
+  background: var(--bg-input-dark);
+  /* keep dark */
+  color: var(--text-main);
+
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.dropzone:hover {
+  border-color: var(--white);
+}
+
+.dropzone p {
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.dropzone span {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* --- BUTTONS --- */
+
+/* Close/X Buttons */
+.close-btn,
+.modal-close,
+.modal-close-x,
+.red-close-x,
+.inline-card-header button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: var(--red) !important;
+  color: var(--white) !important;
+  border: none;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  font-weight: bold;
+}
+
+/* Submit & Action Buttons (Pure White with Black Text) */
+.submit-btn,
+.inline-submit-btn,
+.modal-submit-btn,
+.blue-submit-btn {
+  width: 100%;
+  padding: 16px;
+  background-color: var(--white) !important;
+  color: var(--bg-pure-black) !important;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 16px;
+  margin-top: 32px;
+  cursor: pointer;
+  text-align: center;
+  display: block !important;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.submit-btn:active {
+  transform: scale(0.98);
+}
+
+.submit-btn:hover {
+  opacity: 0.9;
+}
+
+/* --- UTILITIES & HELPERS --- */
+.add-new {
+  color: var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.password-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+
+/* --- INLINE CARD SPECIFICS --- */
+.inline-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.inline-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* --- PASSWORD EYE ICON FIX --- */
+.password-input-container {
+  position: relative;
+  width: 100%;
+}
+
+.password-input-container input {
+  width: 100%;
+  padding-right: 40px;
+  /* eye icon space */
+}
+
+
+.eye-toggle svg {
+  stroke: var(--text-muted);
+}
+
+/* ===== PASSWORD FIELD FIX ===== */
+.password-input-container {
+  position: relative;
+  width: 100%;
+}
+
+.password-input-container input {
+  width: 100%;
+  padding: 12px;
+  padding-right: 42px;
+  /* icon space */
+  height: 46px;
+  box-sizing: border-box;
+}
+
+.eye-toggle {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.field-label,
+.label-row,
+.field label,
+.inline-card-body label,
+.upload-box label {
   margin-bottom: 8px;
 }
 
-.page-desc {
-  color: #6b7280;
-  font-size: 15px;
+.card-input-group {
+  margin-bottom: 16px;
 }
 
-/* THE CARD DESIGN (Modern Indigo Theme) */
-.card {
-  background: #ffffff;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  padding: 40px;
+.card-input-group select {
+  height: 46px;
+}
+
+/* ===== FIX WHITE BACKGROUND ON INPUT (FOCUS / AUTOFILL) ===== */
+
+/* Normal focus */
+input:focus,
+select:focus {
+  background-color: var(--bg-input-dark) !important;
+  color: var(--text-main) !important;
+}
+
+/* Chrome autofill fix */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px var(--bg-input-dark) inset !important;
+  -webkit-text-fill-color: var(--text-main) !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* ===== NEW CLIENT CARD ALIGNMENT FIX ===== */
+
+.client-card-ui {
+  width: 480px;
+  padding: 32px;
+  border-radius: 20px;
+}
+
+.card-body-ui {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 18px;
+  /* same gap between all fields */
 }
 
-.form-group {
+.card-input-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  text-align: left; /* Keep internal text aligned left */
 }
 
-.label {
+.card-input-group label {
+  margin-bottom: 6px;
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
 }
 
-/* Modern Dropzone */
+.card-input-group input,
+.card-input-group select {
+  height: 46px;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--bg-input-dark) !important;
+  border: 1px solid var(--border-subtle) !important;
+  color: var(--text-main) !important;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.password-input-container {
+  position: relative;
+  width: 100%;
+}
+
+.password-input-container input {
+  height: 46px;
+  padding-right: 42px;
+}
+
+.eye-toggle {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.modal-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.client-card-ui {
+  width: 480px;
+  padding: 32px;
+  border-radius: 20px;
+}
+
+.card-body-ui {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  /* SAME GAP between all fields */
+}
+
+.card-input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-input-group label {
+  margin-bottom: 6px;
+  /* gap between name & box */
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.card-input-group input,
+.card-input-group select {
+  width: 100%;
+  height: 46px;
+  /* SAME HEIGHT */
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--bg-input-dark) !important;
+  border: 1px solid var(--border-subtle) !important;
+  color: var(--text-main) !important;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+/* ===== FORM FIELD LABEL SPACING FIX ===== */
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.field-label {
+  margin-bottom: 8px;
+  /* SAME gap everywhere */
+  font-weight: 600;
+}
+
+/* ===== FORCE SAME HEIGHT FOR INPUT & SELECT ===== */
+.input-field,
+.field select,
+.field input {
+  height: 46px;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.field-label {
+  line-height: 1.4;
+}
+
+.error-input {
+  border: 1px solid #ef4444 !important;
+}
+
+.error-label {
+  color: #ef4444 !important;
+}
+
+.error-input {
+  border: 1px solid #ef4444 !important;
+}
+
+.error-label {
+  color: #ef4444 !important;
+}
+
+.error-dropzone {
+  border: 2px solid var(--red) !important;
+  background: rgba(239, 68, 68, 0.08);
+  /* 🔥 dark theme friendly */
+}
+
+.error-label {
+  color: red;
+}
+
+.error-input {
+  border: 2px solid red !important;
+}
+
+/* New Client Card inputs */
+.card-input-group input.error-input,
+.card-input-group select.error-input {
+  border: 2px solid red !important;
+}
+
 .dropzone {
-  border: 2px dashed #d1d5db;
-  border-radius: 12px;
-  padding: 40px;
-  text-align: center;
-  cursor: pointer;
-  background: #f9fafb;
-  transition: all 0.2s ease;
+  min-height: 140px;
+  /* 🔥 both same size */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
-.dropzone:hover {
-  border-color: #6366f1;
-  background: #ffffff;
-}
-
-.icon-circle {
-  width: 56px; height: 56px; background: #eef2ff; color: #4f46e5;
-  border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 16px auto;
-}
-
-.link-text { color: #4f46e5; font-weight: 700; text-decoration: underline; }
-
-/* Submit Button */
-.submit-btn {
-  width: 100%; 
-  padding: 14px; 
-  background: #4f46e5; 
-  color: white;
-  border: none; 
-  border-radius: 8px; 
-  font-weight: 600; 
-  font-size: 16px;
+.searchable-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 46px;        /* SAME AS CLIENT */
   cursor: pointer;
 }
-.submit-btn:hover { background: #4338ca; }
-.submit-btn:disabled { background: #d1d5db; cursor: not-allowed; }
 
-.hidden-file { display: none; }
+
+.dropdown-arrow {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: #a1a1aa;
+  pointer-events: none;
+}
+.input-field,
+.field select,
+.field input {
+  height: 46px;
+  padding: 12px;
+  box-sizing: border-box;
+}
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%23a1a1aa' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+
+  padding-right: 36px;
+}
+select {
+  background-color: var(--bg-input-dark);
+  color: var(--text-main);
+  border: 1px solid var(--border-subtle);
+}
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-color: var(--bg-input-dark);
+  color: var(--text-main);
+  border: 1px solid var(--border-subtle);
+
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%23a1a1aa' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+
+  padding-right: 40px;
+}
+.field select {
+  cursor: pointer;
+}
+/* Custom dropdown arrow for all select fields */
+.input-field {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-color: var(--bg-input-dark);
+  color: var(--text-main);
+  border: 1px solid var(--border-subtle);
+
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%23a1a1aa' height='18' viewBox='0 0 24 24' width='18' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+
+  padding-right: 40px;
+  cursor: pointer;
+}
+select,
+.input-field {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--bg-input-dark);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  font-size: 14px;
+  height: 46px;
+}
+/* ===== FORCE CLIENT SELECT STYLE ===== */
+
+select.input-field {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  width: 100%;
+  height: 46px;
+
+  padding: 12px 16px;
+
+  border-radius: 10px;
+  border: 1px solid #3f3f46;
+
+  background-color: #09090b;
+  color: #ffffff;
+
+  font-size: 14px;
+  box-sizing: border-box;
+
+  cursor: pointer;
+
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%23a1a1aa' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+}
+
+select.input-field:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+/* Placeholder color same as Project dropdown */
+select.input-field:invalid {
+  color: #71717a;
+}
+
+/* Dropdown options color */
+select.input-field option {
+  color: #ffffff;
+}
+/* CLIENT LABEL FIX */
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.label-row .field-label {
+  margin-bottom: 0;
+}
+.field .searchable-dropdown {
+  margin-top: 0;
+}

@@ -1,223 +1,193 @@
-// src/pages/LoginPage.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
+import apiFetch from "../utils/api"; // IMPORTANT
 import "./login.css";
 
 export default function LoginPage({ setUser }) {
-  // View State: 'select' (choose role) or 'form' (enter details)
-  const [view, setView] = useState("select"); 
-  
-  // Login Flow State: 1 = Credentials, 2 = OTP
-  const [step, setStep] = useState(1); 
-
   const [selectedRole, setSelectedRole] = useState("");
-  const [username, setUsername] = useState(""); // Maps to 'username' in API
+  const [view, setView] = useState("select");
+
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [otp, setOtp] = useState("");
-  
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  
+  const [showPassword, setShowPassword] = useState(false);
+
   const navigate = useNavigate();
 
-  // --- STEP 1: SEND CREDENTIALS ---
+  // ✅ SINGLE STEP LOGIN
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      // 1. API Call: Validate Username & Password
-      const response = await fetch("http://172.18.1.35:5000/auth/login", {
+      const response = await apiFetch("/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          username: username, 
-          password: password,
-          required_role: selectedRole // ✅ Sending 'admin' or 'user'
+        body: JSON.stringify({
+          email,
+          password,
+          role: selectedRole,
+          required_role: selectedRole,
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`Invalid credentials or access denied for ${selectedRole}`);
+        throw new Error("Invalid credentials");
       }
 
-      // If success, backend sends OTP
       const data = await response.json();
-      console.log(`${selectedRole} Login Step 1 Success:`, data);
-      
-      setLoading(false);
-      setStep(2); // Move to OTP Step
+
+      // ✅ Store tokens
+      const accessToken = data.access || data.access_token;
+      const refreshToken = data.refresh || data.refresh_token;
+
+      if (!accessToken) {
+        throw new Error("No access token received");
+      }
+
+      localStorage.setItem("access_token", accessToken);
+
+      if (refreshToken) {
+        localStorage.setItem("refresh_token", refreshToken);
+      }
+
+      // ✅ Save user
+      const userData = {
+        email,
+        role: data.role || selectedRole,
+      };
+
+      localStorage.setItem("user", JSON.stringify(userData));
+      setUser(userData);
+
+      // ✅ Redirect
+      navigate(
+        selectedRole === "admin"
+          ? "/admin-dashboard"
+          : selectedRole === "user" || selectedRole === "annotator"
+          ? "/user-dashboard"
+          : "/pilot-dashboard"
+      );
+
     } catch (err) {
-      console.error(err);
-      setError("❌ Invalid Credentials or Server Error");
+      setError("❌ " + err.message);
+    } finally {
       setLoading(false);
     }
   };
 
-  // --- STEP 2 & 3: VERIFY OTP & GET TOKEN ---
-  const handleOtpVerify = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      // 2. API Call: Verify OTP (POST)
-      const otpResponse = await fetch("http://172.18.1.35:5000/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          username: username, 
-          otp: parseInt(otp, 10) 
-        }),
-      });
-
-      if (!otpResponse.ok) {
-        throw new Error("Invalid OTP");
-      }
-
-      console.log("OTP Verified. Fetching final session...");
-
-      // 3. API Call: Get Success Token (GET)
-      const successResponse = await fetch(`http://172.18.1.35:5000/auth/success?username=${username}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" }
-      });
-
-      if (!successResponse.ok) {
-        throw new Error("Failed to retrieve user session details");
-      }
-
-      const finalData = await successResponse.json();
-      console.log("Final Auth Data:", finalData);
-
-      if (finalData.status === "success") {
-        // Construct User Data
-        const userData = { 
-          name: selectedRole === "admin" ? "Admin User" : "Standard User", 
-          username: username,
-          role: finalData.role || selectedRole,
-          token: finalData.access_token
-        };
-        
-        // Save to Storage
-        setUser(userData);
-        localStorage.setItem("user", JSON.stringify(userData));
-        localStorage.setItem("token", finalData.access_token);
-
-        // Redirect based on Role
-        if (selectedRole === "admin") {
-          navigate("/upload"); 
-        } else {
-          navigate("/images");
-        }
-      } else {
-        throw new Error("Authentication flow failed at final step");
-      }
-
-    } catch (err) {
-      console.error(err);
-      setError("❌ Authentication Failed: " + err.message);
-      setLoading(false);
-    }
-  };
-
-  // Helper to reset view when clicking "Back"
-  const handleBackToSelect = () => {
+  const handleBack = () => {
     setView("select");
-    setStep(1);
-    setUsername("");
+    setEmail("");
     setPassword("");
-    setOtp("");
     setError("");
   };
 
   return (
     <div className="login-wrapper">
       <div className="login-card">
-        
         <div className="login-header">
           <h1>DataDash Portal</h1>
-          <p>{view === "select" ? "Choose your login type" : `Login as ${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}`}</p>
+          <p>
+            {view === "select"
+              ? "Choose your login type"
+              : `Login as ${selectedRole}`}
+          </p>
         </div>
 
-        {error && <div style={{ color: "#b91c1c", fontSize: "14px", marginBottom: "15px", background: "#fee2e2", padding: "10px", borderRadius: "6px", border: "1px solid #fca5a5" }}>{error}</div>}
+        {error && (
+          <div className="error-box">
+            {error}
+          </div>
+        )}
 
-        {/* --- VIEW 1: ROLE SELECTION --- */}
         {view === "select" ? (
           <div className="portal-selector">
-            <button className="portal-btn admin" onClick={() => { setSelectedRole("admin"); setView("form"); setStep(1); }}>
-              <div className="portal-icon">🛡️</div>
-              <span>Login as Administrator</span>
+            <button
+              className="portal-btn admin"
+              onClick={() => {
+                setSelectedRole("admin");
+                setView("form");
+              }}
+            >
+              🛡️ Login as Administrator
             </button>
-            <button className="portal-btn user" onClick={() => { setSelectedRole("user"); setView("form"); setStep(1); }}>
-              <div className="portal-icon">👤</div>
-              <span>Login as User</span>
+
+            <button
+              className="portal-btn user"
+              onClick={() => {
+                setSelectedRole("user");
+                setView("form");
+              }}
+            >
+              👤 Login as User
+            </button>
+
+            <button
+              className="portal-btn pilot"
+              onClick={() => {
+                setSelectedRole("pilot");
+                setView("form");
+              }}
+            >
+              ✈️ Login as Pilot
+            </button>
+
+            <button
+              className="portal-btn annotator"
+              onClick={() => {
+                setSelectedRole("annotator");
+                setView("form");
+              }}
+            >
+              ✍️ Login as Annotator
             </button>
           </div>
         ) : (
-          /* --- VIEW 2: LOGIN FORMS --- */
-          <>
-            {/* STEP 1: CREDENTIALS */}
-            {step === 1 && (
-              <form onSubmit={handleLogin} className="login-form">
-                <div className="form-group">
-                  <label>Username</label>
-                  <input 
-                    type="text" 
-                    value={username} 
-                    onChange={(e) => setUsername(e.target.value)} 
-                    required 
-                    placeholder={`Enter ${selectedRole} username`} 
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Password</label>
-                  <input 
-                    type="password" 
-                    value={password} 
-                    onChange={(e) => setPassword(e.target.value)} 
-                    required 
-                    placeholder="Enter password" 
-                  />
-                </div>
-                <button type="submit" className="login-btn" disabled={loading}>
-                  {loading ? "Verifying..." : "Sign In"}
-                </button>
-                <button type="button" className="back-link" onClick={handleBackToSelect}>← Back to selection</button>
-              </form>
-            )}
+          <form onSubmit={handleLogin} className="login-form">
 
-            {/* STEP 2: OTP */}
-            {step === 2 && (
-              <form onSubmit={handleOtpVerify} className="login-form" style={{ animation: "fadeIn 0.5s" }}>
-                <div style={{ background: "#ecfdf5", padding: "10px", borderRadius: "6px", marginBottom: "10px", border: "1px solid #10b981", color: "#065f46", fontSize: "13px" }}>
-                  🔒 OTP sent to registered email for {username}
-                </div>
+            <div className="form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="Enter email"
+              />
+            </div>
 
-                <div className="form-group">
-                  <label>One-Time Password</label>
-                  <input 
-                    type="number" 
-                    value={otp} 
-                    onChange={(e) => setOtp(e.target.value)} 
-                    required 
-                    placeholder="Enter OTP"
-                    autoFocus
-                    style={{ letterSpacing: "5px", fontSize: "18px", textAlign: "center" }}
-                  />
-                </div>
+            <div className="form-group">
+              <label>Password</label>
+              <div className="password-input-container">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="Enter password"
+                />
+                <span className="eye-toggle" onClick={() => setShowPassword((prev) => !prev)}>
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </span>
+              </div>
+            </div>
 
-                <button type="submit" className="login-btn" style={{ background: "#10b981" }} disabled={loading}>
-                  {loading ? "Finalizing..." : "Verify OTP"}
-                </button>
-                
-                <button type="button" className="back-link" onClick={() => { setStep(1); setOtp(""); setError(""); }}>
-                  ← Back to Login
-                </button>
-              </form>
-            )}
-          </>
+            <button type="submit" className="login-btn" disabled={loading}>
+              {loading ? "Signing in..." : "Sign In"}
+            </button>
+
+            <button
+              type="button"
+              className="back-link"
+              onClick={handleBack}
+            >
+              ← Back
+            </button>
+          </form>
         )}
       </div>
     </div>

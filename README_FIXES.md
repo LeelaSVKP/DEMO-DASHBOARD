@@ -113,6 +113,10 @@
 - Email: `user@example.com`
 - Password: `user123`
 
+**Annotator**:
+- Email: `annotator@example.com`
+- Password: `annotator123`
+
 ### Workflow
 
 1. **SuperAdmin**:

@@ -1,0 +1,21 @@
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: white;
+  color: #020617;
+}
+
+.upload-top-btn {
+  background: #0f172a;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.upload-top-btn:hover {
+  background: #1e293b;
+}
