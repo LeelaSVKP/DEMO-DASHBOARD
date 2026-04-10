@@ -133,10 +133,7 @@
   border: 2px solid #ffffff; 
   padding: 12px 22px;
   border-radius: 12px;
-  
-  /* CHANGE: Set to 400 or 500 for normal (not bold) letters */
   font-weight: 400; 
-  
   font-size: 14px;
   color: #ffffff;
   display: flex;
@@ -146,11 +143,10 @@
   transition: all 0.2s ease;
 }
 
-/* Fix: Background stays black, letters stay white and normal weight on hover */
 .btn-outline:hover {
   background: #000000 !important;
   color: #ffffff !important;
-  font-weight: 400 !important; /* Ensures it doesn't flip to bold on hover */
+  font-weight: 400 !important;
   border-color: #ffffff;
 }
 
@@ -200,6 +196,55 @@
   margin-top: 4px;
 }
 
+.project-start-date {
+  position: relative;
+  width: fit-content;
+}
+
+.calendar-trigger-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #0099ff;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.calendar-trigger-btn:hover {
+  transform: scale(1.15);
+  color: #38b6ff;
+}
+
+.calendar-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  background: #0d0d0d;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+  z-index: 120;
+}
+
+.calendar-input {
+  background: #000000;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.calendar-input:focus {
+  outline: none;
+  border-color: #0099ff;
+}
+
 .project-id {
   font-family: monospace;
   color: #ffffff;
@@ -219,7 +264,6 @@
   color: #ffffff;
 }
 
-/* REMOVE STATUS COLORS */
 .status-indicator {
   color: #ffffff;
   font-size: 14px;
@@ -247,6 +291,24 @@
 
 .btn-icon:hover {
   background: #000000;
+}
+
+/* ================= LOCATION PIN BUTTON ================= */
+.location-pin-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 6px;
+  transition: all 0.2s ease;
+}
+
+.location-pin-btn:hover {
+  transform: scale(1.2);
 }
 
 /* ================= DROPDOWN (ACTIONS + ADVANCED) ================= */
@@ -288,4 +350,74 @@
 
 .menu-item.danger:hover {
   background: #000000;
+}
+
+/* ================= IMAGE MODAL ================= */
+.image-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.image-modal {
+  background: #1a1a1a;
+  border-radius: 16px;
+  max-width: 80vw;
+  max-height: 80vh;
+  overflow: auto;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header {
+  padding: 20px;
+  display: flex;
+  justify-content: flex-end;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.close-btn {
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  background: transparent !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 8px !important;
+  width: 40px !important;
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.image-grid {
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image-grid p {
+  display: none;
+}
+
+.gallery-img {
+  max-width: 100%;
+  max-height: 70vh;
+  border-radius: 8px;
 }

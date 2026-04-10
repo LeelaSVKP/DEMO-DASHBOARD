@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
-import apiFetch from "../utils/api"; // IMPORTANT
+import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
+import apiFetch from "../utils/api";
 import "./login.css";
 
 export default function LoginPage({ setUser }) {
@@ -17,7 +17,6 @@ export default function LoginPage({ setUser }) {
 
   const navigate = useNavigate();
 
-  // ✅ SINGLE STEP LOGIN
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
@@ -40,7 +39,6 @@ export default function LoginPage({ setUser }) {
 
       const data = await response.json();
 
-      // ✅ Store tokens
       const accessToken = data.access || data.access_token;
       const refreshToken = data.refresh || data.refresh_token;
 
@@ -54,7 +52,6 @@ export default function LoginPage({ setUser }) {
         localStorage.setItem("refresh_token", refreshToken);
       }
 
-      // ✅ Save user
       const userData = {
         email,
         role: data.role || selectedRole,
@@ -63,7 +60,6 @@ export default function LoginPage({ setUser }) {
       localStorage.setItem("user", JSON.stringify(userData));
       setUser(userData);
 
-      // ✅ Redirect
       navigate(
         selectedRole === "admin"
           ? "/admin-dashboard"
@@ -73,7 +69,7 @@ export default function LoginPage({ setUser }) {
       );
 
     } catch (err) {
-      setError("❌ " + err.message);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -89,105 +85,130 @@ export default function LoginPage({ setUser }) {
   return (
     <div className="login-wrapper">
       <div className="login-card">
-        <div className="login-header">
-          <h1>DataDash Portal</h1>
-          <p>
-            {view === "select"
-              ? "Choose your login type"
-              : `Login as ${selectedRole}`}
-          </p>
-        </div>
-
-        {error && (
-          <div className="error-box">
-            {error}
-          </div>
-        )}
-
         {view === "select" ? (
-          <div className="portal-selector">
-            <button
-              className="portal-btn admin"
-              onClick={() => {
-                setSelectedRole("admin");
-                setView("form");
-              }}
-            >
-              🛡️ Login as Administrator
-            </button>
-
-            <button
-              className="portal-btn user"
-              onClick={() => {
-                setSelectedRole("user");
-                setView("form");
-              }}
-            >
-              👤 Login as User
-            </button>
-
-            <button
-              className="portal-btn pilot"
-              onClick={() => {
-                setSelectedRole("pilot");
-                setView("form");
-              }}
-            >
-              ✈️ Login as Pilot
-            </button>
-
-            <button
-              className="portal-btn annotator"
-              onClick={() => {
-                setSelectedRole("annotator");
-                setView("form");
-              }}
-            >
-              ✍️ Login as Annotator
-            </button>
-          </div>
-        ) : (
-          <form onSubmit={handleLogin} className="login-form">
-
-            <div className="form-group">
-              <label>Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="Enter email"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Password</label>
-              <div className="password-input-container">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  placeholder="Enter password"
-                />
-                <span className="eye-toggle" onClick={() => setShowPassword((prev) => !prev)}>
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </span>
+          <>
+            <div className="login-header">
+              <div style={{fontSize: '24px', fontWeight: '700', marginBottom: '8px'}}>
+                <span style={{color: '#f97316'}}>AKIN</span>{' '}
+                <span style={{color: '#3b82f6'}}>ANALYTICS</span>
               </div>
+              <p>Select your account type to continue</p>
             </div>
 
-            <button type="submit" className="login-btn" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
-            </button>
+            {error && <div className="error-box">{error}</div>}
 
-            <button
-              type="button"
-              className="back-link"
-              onClick={handleBack}
-            >
-              ← Back
+            <div className="portal-selector">
+              <button
+                className="portal-btn"
+                onClick={() => {
+                  setSelectedRole("admin");
+                  setView("form");
+                }}
+              >
+                <span className="portal-icon">🛡️</span>
+                <span>Login as Administrator</span>
+              </button>
+
+              <button
+                className="portal-btn"
+                onClick={() => {
+                  setSelectedRole("user");
+                  setView("form");
+                }}
+              >
+                <span className="portal-icon">👤</span>
+                <span>Login as User</span>
+              </button>
+
+              <button
+                className="portal-btn"
+                onClick={() => {
+                  setSelectedRole("pilot");
+                  setView("form");
+                }}
+              >
+                <span className="portal-icon">✈️</span>
+                <span>Login as Pilot</span>
+              </button>
+
+              <button
+                className="portal-btn"
+                onClick={() => {
+                  setSelectedRole("annotator");
+                  setView("form");
+                }}
+              >
+                <span className="portal-icon">✍️</span>
+                <span>Login as Annotator</span>
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="login-header">
+              <h1>Welcome Back</h1>
+              <p>Sign in to your account to continue</p>
+            </div>
+
+            {error && <div className="error-box">{error}</div>}
+
+            <form onSubmit={handleLogin} className="login-form">
+              <div>
+                <label>Email</label>
+                <div className="input-wrapper">
+                  <div className="input-icon-left">
+                    <Mail size={18} />
+                  </div>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="you@akinanalytics.com"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label>Password</label>
+                <div className="input-wrapper password-input-container">
+                  <div className="input-icon-left">
+                    <Lock size={18} />
+                  </div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    className="eye-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
+                    tabIndex="-1"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" className="login-btn" disabled={loading}>
+                {loading ? (
+                  "Signing in..."
+                ) : (
+                  <>
+                    Login
+                    <ArrowRight size={18} />
+                  </>
+                )}
+              </button>
+            </form>
+
+            <button type="button" className="back-link" onClick={handleBack}>
+              ← Back to roles
             </button>
-          </form>
+          </>
         )}
       </div>
     </div>

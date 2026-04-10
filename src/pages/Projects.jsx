@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 // Import the custom apiFetch (using the default export we added)
-import apiFetch from "../utils/api"; 
+import apiFetch from "../utils/api";
 import {
   Search,
   MoreHorizontal,
@@ -9,7 +9,11 @@ import {
   FileText,
   Edit,
   Trash2,
-  X
+  X,
+  Zap,
+  Clipboard,
+  CheckCircle,
+  AlertCircle,
 } from "lucide-react";
 import "./projects.css";
 
@@ -24,25 +28,49 @@ export default function Projects() {
   const [industryFilter, setIndustryFilter] = useState("all");
 
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [openCalendarId, setOpenCalendarId] = useState(null);
+  const [projectDates, setProjectDates] = useState({});
 
   const [imageModal, setImageModal] = useState({
     open: false,
     images: [],
   });
 
-  /* ================= FETCH PROJECTS (FIXED) ================= */
+  const formatDateForInput = (value) => {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const formatDateForDisplay = (value) => {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "-";
+    return date.toLocaleDateString();
+  };
+
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        
-        // 1. Call apiFetch instead of api.get
         const response = await apiFetch(PROJECTS_ENDPOINT);
-        
+
         if (response.ok) {
-          // 2. Must parse JSON with native fetch
           const data = await response.json();
           setProjects(data || []);
+          setProjectDates(
+            Object.fromEntries(
+              (data || []).map((project) => [
+                project.project_code,
+                formatDateForInput(project.created_at),
+              ])
+            )
+          );
         } else {
           console.error("Server error:", response.status);
           setProjects([]);
@@ -58,7 +86,6 @@ export default function Projects() {
     fetchProjects();
   }, []);
 
-  /* ================= MENU HANDLING ================= */
   const toggleMenu = (id) => {
     setOpenMenuId(openMenuId === id ? null : id);
   };
@@ -66,24 +93,55 @@ export default function Projects() {
   useEffect(() => {
     const closeMenu = () => {
       setOpenMenuId(null);
+      setOpenCalendarId(null);
     };
     window.addEventListener("click", closeMenu);
     return () => window.removeEventListener("click", closeMenu);
   }, []);
 
-  /* ================= IMAGE MODAL ================= */
   const openImages = (image) => {
-    setImageModal({
-      open: true,
-      images: image ? [image] : [],
-    });
+    if (image) {
+      setImageModal({
+        open: true,
+        images: [image],
+      });
+    }
   };
 
   const closeImages = () => {
     setImageModal({ open: false, images: [] });
   };
 
-  /* ================= FILTER LOGIC ================= */
+  const getStatusIcon = (status) => {
+    const statusLower = status?.toLowerCase() || "";
+
+    const statusIconMap = {
+      inprogress: { icon: Zap, color: "#fbbf24", label: "In Progress" },
+      planning: { icon: Clipboard, color: "#60a5fa", label: "Planning" },
+      completed: { icon: CheckCircle, color: "#34d399", label: "Completed" },
+    };
+
+    return (
+      statusIconMap[statusLower] || {
+        icon: AlertCircle,
+        color: "#f87171",
+        label: status,
+      }
+    );
+  };
+
+  const StatusBadge = ({ status }) => {
+    const statusInfo = getStatusIcon(status);
+    const IconComponent = statusInfo.icon;
+
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <IconComponent size={16} color={statusInfo.color} />
+        <span>{status}</span>
+      </div>
+    );
+  };
+
   const filteredProjects = projects.filter((project) => {
     const matchesSearch =
       project.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -155,7 +213,6 @@ export default function Projects() {
           <h3 className="table-header-title">
             Projects List ({filteredProjects.length})
           </h3>
-
         </div>
 
         <div className="projects-table-wrapper">
@@ -177,20 +234,53 @@ export default function Projects() {
                   <tr
                     key={project.project_code}
                     className="clickable-row"
-                    onClick={() =>
-                      openImages(project.project_image_path)
-                    }
+                    onClick={() => openImages(project.project_image_path)}
                   >
                     <td>{project.project_code}</td>
 
                     <td>
                       <div>{project.project_name}</div>
-                      <div className="project-meta">
-                        <Calendar size={12} />
-                        Started{" "}
-                        {project.created_at
-                          ? new Date(project.created_at).toLocaleDateString()
-                          : "-"}
+                      <div className="project-meta project-start-date">
+                        <button
+                          type="button"
+                          className="calendar-trigger-btn"
+                          title="Open calendar"
+                          aria-label={`Open calendar for ${project.project_name}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenCalendarId(
+                              openCalendarId === project.project_code
+                                ? null
+                                : project.project_code
+                            );
+                          }}
+                        >
+                          <Calendar size={12} />
+                        </button>
+
+                        <span>
+                          Started {formatDateForDisplay(projectDates[project.project_code] || project.created_at)}
+                        </span>
+
+                        {openCalendarId === project.project_code && (
+                          <div
+                            className="calendar-popover"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <input
+                              type="date"
+                              className="calendar-input"
+                              value={projectDates[project.project_code] || ""}
+                              onChange={(e) => {
+                                const nextDate = e.target.value;
+                                setProjectDates((prev) => ({
+                                  ...prev,
+                                  [project.project_code]: nextDate,
+                                }));
+                              }}
+                            />
+                          </div>
+                        )}
                       </div>
                     </td>
 
@@ -198,12 +288,24 @@ export default function Projects() {
 
                     <td>
                       <div className="project-meta">
-                        <MapPin size={13} />
+                        <button
+                          className="location-pin-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(project.location_name)}`;
+                            window.open(mapsUrl, "_blank");
+                          }}
+                          title="Open location in map"
+                        >
+                          <MapPin size={13} color="#0099ff" />
+                        </button>
                         {project.location_name}
                       </div>
                     </td>
 
-                    <td>{project.status}</td>
+                    <td>
+                      <StatusBadge status={project.status} />
+                    </td>
 
                     <td className="action-cell">
                       <button

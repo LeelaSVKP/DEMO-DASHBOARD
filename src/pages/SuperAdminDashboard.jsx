@@ -236,6 +236,7 @@ const [industryPage, setIndustryPage] = useState(0);
   /* ================= CLIENT CLICK ================= */
   // Industries are embedded directly in the client object from dashboard API
   const handleClientClick = (client) => {
+    setSearchTerm("");
     setSelectedClient(client);
     setSelectedIndustry(null);
     setSelectedProject(null);
@@ -247,6 +248,7 @@ const [industryPage, setIndustryPage] = useState(0);
 
   /* ================= INDUSTRY CLICK ================= */
   const handleIndustryClick = async (industry) => {
+    setSearchTerm("");
     setLoadingReport(true);
     try {
       const matched = reportIndustries.find(
@@ -377,6 +379,7 @@ const handleDeliverableClick = async (del) => {
 
   /* ================= RECENT PROJECT CLICK ================= */
   const handleRecentProjectClick = async (p) => {
+    setSearchTerm("");
     setLoadingReport(true);
     try {
       const clickedName = (p.project_name || p.name || "").toLowerCase().trim();
@@ -385,29 +388,43 @@ const handleDeliverableClick = async (del) => {
 
       let industryMatch = reportIndustries.find(ind => ind.id === targetIndId);
       if (!industryMatch) {
+        // Try exact match first
         industryMatch = reportIndustries.find(ind =>
-          (ind.name || "").toLowerCase() === clickedName.split(' ').slice(0, 2).join(' ')
+          normalize(ind.name) === normalize(clickedName.split(' ')[0])
         );
       }
-      if (!industryMatch) throw new Error("Industry not found. Please refresh and try again.");
+      if (!industryMatch && reportIndustries.length > 0) {
+        // Fall back to first industry if all else fails
+        industryMatch = reportIndustries[0];
+      }
+      if (!industryMatch) throw new Error("No industries available. Please refresh and try again.");
 
       const res = await apiFetch(`/reports/?industry_id=${industryMatch.id}`);
       if (!res.ok) throw new Error("Failed to fetch projects from API");
       const apiData = await res.json();
       const apiProjects = apiData.projects || [];
 
-      const officialProject = apiProjects.find(proj => {
-        const projName = (proj.project_name || proj.name || "").toLowerCase().trim();
+      let officialProject = null;
+      
+      // Try exact ID match first
+      officialProject = apiProjects.find(proj => {
         const projId = proj._id || proj.id;
-        return (
-          projId === clickedId ||
-          projName === clickedName ||
-          projName.includes(clickedName) ||
-          clickedName.includes(projName)
-        );
+        return projId === clickedId;
       });
+      
+      // Try name matching
+      if (!officialProject) {
+        officialProject = apiProjects.find(proj => {
+          const projName = (proj.project_name || proj.name || "").toLowerCase().trim();
+          return projName === clickedName || projName.includes(clickedName) || clickedName.includes(projName);
+        });
+      }
 
-      if (!officialProject) throw new Error("Could not find this project. Please try again.");
+      if (!officialProject && apiProjects.length > 0) {
+        // If still no match, use first project as fallback
+        officialProject = apiProjects[0];
+      }
+      if (!officialProject) throw new Error("No projects found in this industry.");
 
       setSelectedIndustry({ name: industryMatch.name, mongoId: industryMatch.id, id: industryMatch.id });
       setSelectedProject({ ...officialProject, id: officialProject._id || officialProject.id });
@@ -445,7 +462,7 @@ const handleDeliverableClick = async (del) => {
     } finally {
       setLoadingReport(false);
     }
-  };
+  }
 
   /* ================= RENDER: DELIVERABLES VIEW ================= */
   const renderDeliverablesView = () => (
@@ -716,7 +733,8 @@ const handleDeliverableClick = async (del) => {
         </div>
       </div>
 
-     {/* Clients */}
+     {/* Clients - Only show if searching for clients or no search */}
+{(!searchTerm || filteredClients.length > 0) && (
 <div className="client-management-wrapper" style={{ marginBottom: 'var(--section-gap)' }}>
   <h2 className="section-title" style={{ margin: 0, marginBottom: 24 }}>Clients</h2>
 
@@ -738,8 +756,10 @@ const handleDeliverableClick = async (del) => {
     </div>
   </div>
 </div>
+)}
 
-{/* Industries */}
+{/* Industries - Only show if searching for industries or no search */}
+{(!searchTerm || filteredIndustries.length > 0) && (
 <div className="project-management-wrapper">
 
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
@@ -798,8 +818,11 @@ const handleDeliverableClick = async (del) => {
     </div>
   </div>
 </div>
-      {/* Recent Projects */}
-      <div className="project-management-wrapper">
+)}
+
+{/* Recent Projects - Only show if searching for projects or no search */}
+{(!searchTerm || filteredRecentProjects.length > 0) && (
+<div className="project-management-wrapper">
         <h2 className="section-title">Recent Projects</h2>
         <div className="industry-grid-page">
           {filteredRecentProjects.map((p) => (
@@ -817,6 +840,7 @@ const handleDeliverableClick = async (del) => {
           ))}
         </div>
       </div>
+)}
     </div>
   );
 

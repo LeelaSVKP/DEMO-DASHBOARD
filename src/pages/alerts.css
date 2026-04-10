@@ -10,7 +10,7 @@
 .alerts-page {
     position: fixed;
     top: 0;
-    left: 260px; /* Sidebar width */
+    left: 260px;
     right: 0;
     bottom: 0;
     overflow-y: auto;
@@ -20,7 +20,6 @@
     color: #ffffff;
 }
 
-/* --- PAGE HEADER --- */
 .page-title {
     font-size: 28px;
     font-weight: 800;
@@ -28,20 +27,19 @@
     color: #ffffff;
 }
 
-/* --- FILTERS BAR (Fixed Widths) --- */
 .filters-bar {
     display: flex;
     width: 100%;
     gap: 16px;
-    background-color: #000000; 
-    padding: 20px 0; /* Align with screenshot padding */
+    background-color: #000000;
+    padding: 20px 0;
     margin-bottom: 30px;
     align-items: center;
 }
 
 .search-wrapper {
     position: relative;
-    flex: 0 0 45%; /* Exactly 45% */
+    flex: 0 0 45%;
 }
 
 .search-input {
@@ -65,37 +63,29 @@
 }
 
 .filter-select-wrapper {
-    flex: none !important; 
+    flex: none !important;
     position: relative;
     display: inline-block;
 }
 
 .filter-select {
-    /* WIDTH: Decreased another 10% (420px - 42px = 378px) */
-    width: 270px !important; 
-    min-width: 270px !important; 
-
-    /* HEIGHT: Maintains the 10% increase (53px) */
-    height: 53px !important; 
-
+    width: 270px !important;
+    min-width: 270px !important;
+    height: 53px !important;
     background-color: #0a0a0a;
     border: 23px solid #27272a;
     border-radius: 23px;
     color: #ffffff;
-    padding: 0 10px; 
+    padding: 0 10px;
     font-weight: 600;
     font-size: 14px;
-    
-    /* CLEAN LOOK: No arrows or symbols */
     appearance: none !important;
     -webkit-appearance: none;
     -moz-appearance: none;
-    
     cursor: pointer;
     outline: none;
 }
 
-/* --- TABLE STYLING --- */
 .table-card {
     background-color: #000000;
     border: 1px solid #1a1a1a;
@@ -142,6 +132,44 @@
     padding: 20px 24px;
     border-bottom: 1px solid #1a1a1a;
     font-size: 14px;
+    vertical-align: middle;
+}
+
+.flex-center {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.alert-status-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #f4f4f5;
+    white-space: nowrap;
+}
+
+.alert-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.04);
+}
+
+.status-dot-active {
+    background: #ef4444;
+}
+
+.status-dot-acknowledged {
+    background: #f59e0b;
+}
+
+.status-dot-resolved {
+    background: #22c55e;
 }
 
 .severity-pill {
@@ -176,21 +204,23 @@
 }
 
 .menu-item:hover { background: #1a1a1a; }
-.severity-badge{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  font-size:13px;
-  text-transform:capitalize;
-}
-.sev-critical{
-  color:#ef4444;
+
+.severity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  text-transform: capitalize;
 }
 
-.sev-warning{
-  color:#facc15;
+.sev-critical {
+  color: #ef4444;
 }
 
-.sev-info{
-  color:#3b82f6;
+.sev-warning {
+  color: #facc15;
+}
+
+.sev-info {
+  color: #3b82f6;
 }

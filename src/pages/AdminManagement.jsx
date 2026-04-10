@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Search, Plus, MoreVertical, X, Clock, 
-  Check, ChevronDown, Eye, EyeOff 
+import {
+  Search, Plus, MoreVertical, X, Clock,
+  Eye, EyeOff, CheckCircle, AlertTriangle, XCircle
 } from "lucide-react";
 import "./adminManagement.css";
 
@@ -10,13 +10,10 @@ const BASE_URL = "https://api-db-67gt.onrender.com";
 
 export default function AdminManagement() {
   const navigate = useNavigate();
-  
-  // DATA STATES
+
   const [admins, setAdmins] = useState([]);
   const [dynamicProjects, setDynamicProjects] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // UI STATES
   const [selectedAdmin, setSelectedAdmin] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [toast, setToast] = useState(null);
@@ -25,11 +22,10 @@ export default function AdminManagement() {
   const [addNewMenuOpen, setAddNewMenuOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
-  
-  // FORM STATE
+
   const [formData, setFormData] = useState({
     client_name: "",
-    user_name: "", 
+    user_name: "",
     pilot_name: "",
     email_id: "",
     password: "",
@@ -55,16 +51,35 @@ export default function AdminManagement() {
     return value.charAt(0).toUpperCase() + value.slice(1);
   };
 
-  /* ================= FETCH DATA ================= */
+  const getStatusMeta = (status) => {
+    const normalized = status?.toLowerCase() || "active";
+
+    const statusMap = {
+      active: { icon: CheckCircle, color: "#22c55e", label: "Active" },
+      inactive: { icon: XCircle, color: "#ef4444", label: "Inactive" },
+      pending: { icon: Clock, color: "#f59e0b", label: "Pending" },
+      suspended: { icon: AlertTriangle, color: "#f97316", label: "Suspended" }
+    };
+
+    return statusMap[normalized] || {
+      icon: AlertTriangle,
+      color: "#60a5fa",
+      label: status || "Unknown"
+    };
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        if (!token) { navigate("/"); return; }
+        if (!token) {
+          navigate("/");
+          return;
+        }
 
         const headers = {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`
         };
 
         const [adminRes, projectRes] = await Promise.all([
@@ -72,8 +87,11 @@ export default function AdminManagement() {
           fetch(`${BASE_URL}/projects/`, { headers })
         ]);
 
-        if (adminRes.status === 401) { navigate("/"); return; }
-        
+        if (adminRes.status === 401) {
+          navigate("/");
+          return;
+        }
+
         const adminData = await adminRes.json();
         const projectData = await projectRes.json();
 
@@ -102,7 +120,6 @@ export default function AdminManagement() {
     fetchData();
   }, [navigate]);
 
-  /* ================= HANDLERS ================= */
   const handleAddNewClick = () => {
     setAddNewMenuOpen((prev) => !prev);
   };
@@ -136,15 +153,13 @@ export default function AdminManagement() {
 
   const handleSubmitForm = async (e) => {
     e.preventDefault();
-    console.log("Form submit called for role:", selectedRole);
-    
+
     try {
       const token = localStorage.getItem("access_token");
       let endpoint = "";
       let payload = {};
       let successMessage = "";
-      
-      // Handle Admin registration via API
+
       if (selectedRole === "Admin") {
         endpoint = `${BASE_URL}/admins/register`;
         payload = {
@@ -155,9 +170,7 @@ export default function AdminManagement() {
           role: "admin"
         };
         successMessage = "Admin registered successfully";
-      } 
-      // Handle User registration via API
-      else if (selectedRole === "User") {
+      } else if (selectedRole === "User") {
         endpoint = `${BASE_URL}/users/register`;
         payload = {
           client_name: formData.client_name,
@@ -168,9 +181,7 @@ export default function AdminManagement() {
           role: "user"
         };
         successMessage = "User registered successfully";
-      }
-      // Handle Pilot registration via API
-      else if (selectedRole === "Pilot") {
+      } else if (selectedRole === "Pilot") {
         endpoint = `${BASE_URL}/register-pilot`;
         payload = {
           client_name: formData.client_name,
@@ -181,8 +192,7 @@ export default function AdminManagement() {
           drone_category: formData.drone_category,
           license_number: formData.license_number,
         };
-        
-        // Add license IDs based on drone category
+
         if (formData.drone_category === "Small") {
           payload.small_license_id = formData.small_license_id;
         } else if (formData.drone_category === "Medium") {
@@ -193,22 +203,18 @@ export default function AdminManagement() {
         }
         successMessage = "Pilot registered successfully";
       }
-      
+
       if (endpoint) {
-        console.log("Sending registration to:", endpoint, "Payload:", payload);
         const response = await fetch(endpoint, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            Authorization: `Bearer ${token}`
           },
           body: JSON.stringify(payload)
         });
-        
-        console.log("Response status:", response.status, "OK:", response.ok);
-        
+
         if (response.ok) {
-          console.log("Registration successful");
           alert(successMessage);
           setShowModal(false);
           setShowPassword(false);
@@ -226,9 +232,9 @@ export default function AdminManagement() {
             client_code: "",
             role: "user"
           });
-          // Refresh data
+
           const adminRes = await fetch(`${BASE_URL}/admins/`, {
-            headers: { "Authorization": `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${token}` }
           });
           if (adminRes.ok) {
             const adminData = await adminRes.json();
@@ -245,10 +251,8 @@ export default function AdminManagement() {
         } else {
           try {
             const errorData = await response.json();
-            console.error(`${selectedRole} registration error:`, errorData);
             alert(errorData.message || `Failed to register ${selectedRole}. Please try again.`);
-          } catch (parseErr) {
-            console.error("Error parsing response:", parseErr);
+          } catch {
             alert(`Failed to register ${selectedRole}. Please try again.`);
           }
         }
@@ -269,7 +273,7 @@ export default function AdminManagement() {
 
   const filteredAdmins = useMemo(() => {
     return admins.filter((a) => {
-      const matchesSearch = 
+      const matchesSearch =
         a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         a.email.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesRole = roleFilter === "All" || a.role === roleFilter;
@@ -277,11 +281,13 @@ export default function AdminManagement() {
     });
   }, [admins, searchTerm, roleFilter]);
 
-  if (loading) return (
-    <div className="admin-page">
-      <div className="status-loader">Fetching Database Records...</div>
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="admin-page">
+        <div className="status-loader">Fetching Database Records...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-page">
@@ -293,7 +299,7 @@ export default function AdminManagement() {
         </div>
         <div className="header-actions">
           <button className="btn-create" onClick={handleAddNewClick}>
-            <Plus size={18} />  Add New
+            <Plus size={18} /> Add New
           </button>
           {addNewMenuOpen && (
             <div className="add-new-menu">
@@ -315,11 +321,7 @@ export default function AdminManagement() {
           />
         </div>
 
-        <select 
-          className="role-select" 
-          value={roleFilter} 
-          onChange={(e) => setRoleFilter(e.target.value)}
-        >
+        <select className="role-select" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
           <option value="All">All Roles</option>
           <option value="Admin">Admin</option>
           <option value="User">User</option>
@@ -330,48 +332,50 @@ export default function AdminManagement() {
       <div className="content-card">
         <table className="modern-table">
           <thead>
-  <tr>
-    <th>CLIENT</th>
-    <th>CLIENT CODE</th>
-    <th>EMAIL</th>
-    <th>SYSTEM ROLE</th>
-    <th>STATUS</th>
-    <th>CREATED ON</th>
-    <th style={{ textAlign: "right" }}>ACTIONS</th>
-  </tr>
-</thead>
+            <tr>
+              <th>CLIENT</th>
+              <th>CLIENT CODE</th>
+              <th>EMAIL</th>
+              <th>SYSTEM ROLE</th>
+              <th>STATUS</th>
+              <th>CREATED ON</th>
+              <th style={{ textAlign: "right" }}>ACTIONS</th>
+            </tr>
+          </thead>
           <tbody>
-            {filteredAdmins.map((admin) => (
-              <tr key={admin.id}>
-                <td>{admin.name}</td>
+            {filteredAdmins.map((admin) => {
+              const statusMeta = getStatusMeta(admin.status);
+              const StatusIcon = statusMeta.icon;
 
-<td>{admin.id}</td>
-
-<td>{admin.email}</td>
-                <td><span className={`role-badge ${admin.role.toLowerCase()}`}>{admin.role}</span></td>
-                <td>
-                  <div className="status-container">
-                    <span className="status-indicator active"></span>
-                    {admin.status}
-                  </div>
-                </td>
-                <td>
-                  <div className="login-time" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Clock size={14} /> {admin.created_at}
-                  </div>
-                </td>
-                <td style={{ textAlign: "right" }}>
-                  <button className="btn-icon" onClick={() => setSelectedAdmin(admin)}>
-                    <MoreVertical size={18} />
-                  </button>
-                </td>
-              </tr>
-            ))}
+              return (
+                <tr key={admin.id}>
+                  <td>{admin.name}</td>
+                  <td>{admin.id}</td>
+                  <td>{admin.email}</td>
+                  <td><span className={`role-badge ${admin.role.toLowerCase()}`}>{admin.role}</span></td>
+                  <td>
+                    <div className="status-container" style={{ gap: "8px" }}>
+                      <StatusIcon size={14} color={statusMeta.color} />
+                      {statusMeta.label}
+                    </div>
+                  </td>
+                  <td>
+                    <div className="login-time" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <Clock size={14} color="#3b82f6" /> {admin.created_at}
+                    </div>
+                  </td>
+                  <td style={{ textAlign: "right" }}>
+                    <button className="btn-icon" onClick={() => setSelectedAdmin(admin)}>
+                      <MoreVertical size={18} />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      {/* NEW ADMIN MODAL */}
       {showModal && (
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal-content admin-card-modal" onClick={(e) => e.stopPropagation()}>
@@ -381,16 +385,9 @@ export default function AdminManagement() {
 
             <h2>REGISTER NEW {selectedRole ? selectedRole.toUpperCase() : "USER"}</h2>
 
-            {selectedRole === "Annotator" ? (
-              <div className="annotator-note">
-                <p>Annotator registration is not available in this version yet.</p>
-                <button type="button" className="btn-confirm-blue" onClick={handleCloseModal}>
-                  Close
-                </button>
-              </div>
-            ) : (
-              <form className="modal-form" onSubmit={handleSubmitForm}>
-                {selectedRole === "Admin" && (
+            <form className="modal-form" onSubmit={handleSubmitForm}>
+              {selectedRole === "Admin" && (
+                <>
                   <div className="form-row">
                     <label>Client Name <span className="required">*</span></label>
                     <input
@@ -401,227 +398,211 @@ export default function AdminManagement() {
                       required
                     />
                   </div>
-                )}
-
-                {selectedRole === "User" && (
-  <>
-    <div className="form-row">
-      <label>Client Name <span className="required">*</span></label>
-      <input
-        type="text"
-        placeholder="Enter client name"
-        value={formData.client_name}
-        onChange={(e) =>
-          setFormData({
-            ...formData,
-            client_name: capitalizeFirst(e.target.value)
-          })
-        }
-        required
-      />
-    </div>
-
-    <div className="form-row">
-      <label>User Name <span className="required">*</span></label>
-      <input
-        type="text"
-        placeholder="Enter user name"
-        value={formData.user_name}
-        onChange={(e) =>
-          setFormData({
-            ...formData,
-            user_name: capitalizeFirst(e.target.value)
-          })
-        }
-        required
-      />
-    </div>
-  </>
-)}
-
-                {selectedRole === "Pilot" && (
-  <>
-    <div className="form-row">
-      <label>Client Name <span className="required">*</span></label>
-      <input
-        type="text"
-        placeholder="Enter client name"
-        value={formData.client_name}
-        onChange={(e) =>
-          setFormData({
-            ...formData,
-            client_name: capitalizeFirst(e.target.value)
-          })
-        }
-        required
-      />
-    </div>
-
-    <div className="form-row">
-      <label>Pilot Name <span className="required">*</span></label>
-      <input
-        type="text"
-        placeholder="Enter pilot name"
-        value={formData.pilot_name}
-        onChange={(e) =>
-          setFormData({
-            ...formData,
-            pilot_name: capitalizeFirst(e.target.value)
-          })
-        }
-        required
-      />
-    </div>
-
-    <div className="form-row">
-      <label>Drone Category <span className="required">*</span></label>
-      <select
-        value={formData.drone_category}
-        onChange={(e) =>
-          setFormData({
-            ...formData,
-            drone_category: e.target.value,
-            small_license_id: "",
-            medium_license_id: ""
-          })
-        }
-        required
-      >
-        <option value="">Select Drone Category</option>
-        <option value="Small">Small</option>
-        <option value="Medium">Medium</option>
-        <option value="Hybrid">Hybrid</option>
-      </select>
-    </div>
-
-    {formData.drone_category === "Small" && (
-      <div className="form-row">
-        <label>Enter Small License ID <span className="required">*</span></label>
-        <input
-          type="text"
-          placeholder="Enter small license ID"
-          value={formData.small_license_id}
-          onChange={(e) => setFormData({ ...formData, small_license_id: e.target.value })}
-          required
-        />
-      </div>
-    )}
-
-    {formData.drone_category === "Medium" && (
-      <div className="form-row">
-        <label>Enter Medium License ID <span className="required">*</span></label>
-        <input
-          type="text"
-          placeholder="Enter medium license ID"
-          value={formData.medium_license_id}
-          onChange={(e) => setFormData({ ...formData, medium_license_id: e.target.value })}
-          required
-        />
-      </div>
-    )}
-
-    {formData.drone_category === "Hybrid" && (
-      <>
-        <div className="form-row">
-          <label>Enter Small License ID <span className="required">*</span></label>
-          <input
-            type="text"
-            placeholder="Enter small license ID"
-            value={formData.small_license_id}
-            onChange={(e) => setFormData({ ...formData, small_license_id: e.target.value })}
-            required
-          />
-        </div>
-        <div className="form-row">
-          <label>Enter Medium License ID <span className="required">*</span></label>
-          <input
-            type="text"
-            placeholder="Enter medium license ID"
-            value={formData.medium_license_id}
-            onChange={(e) => setFormData({ ...formData, medium_license_id: e.target.value })}
-            required
-          />
-        </div>
-      </>
-    )}
-
-    <div className="form-row">
-      <label>License Number <span className="required">*</span></label>
-      <input
-        type="text"
-        placeholder="Enter license number"
-        value={formData.license_number}
-        onChange={(e) => setFormData({ ...formData, license_number: e.target.value })}
-        required
-      />
-    </div>
-
-    <div className="form-row">
-      <label>Contact Number <span className="required">*</span></label>
-      <input
-        type="text"
-        placeholder="Enter contact number"
-        value={formData.contact_number}
-        onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })}
-        required
-      />
-    </div>
-  </>
-)}
-
-                <div className="form-row">
-                  <label>Email <span className="required">*</span></label>
-                  <input
-                    type="email"
-                    placeholder="email@example.com"
-                    value={formData.email_id}
-                    onChange={(e) => setFormData({ ...formData, email_id: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="form-row">
-                  <label>Password <span className="required">*</span></label>
-                  <div className="password-input-container">
+                  <div className="form-row">
+                    <label>Contact Number <span className="required">*</span></label>
                     <input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter password"
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      type="text"
+                      placeholder="Enter contact number"
+                      value={formData.contact_number}
+                      onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })}
                       required
                     />
-                    <span
-                      className="eye-toggle"
-                      onClick={() => setShowPassword((prev) => !prev)}
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </span>
                   </div>
-                </div>
+                </>
+              )}
 
-                <button type="submit" className="btn-confirm-blue">SUBMIT</button>
-              </form>
-            )}
+              {selectedRole === "User" && (
+                <>
+                  <div className="form-row">
+                    <label>Client Name <span className="required">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="Enter client name"
+                      value={formData.client_name}
+                      onChange={(e) => setFormData({ ...formData, client_name: capitalizeFirst(e.target.value) })}
+                      required
+                    />
+                  </div>
+                  <div className="form-row">
+                    <label>User Name <span className="required">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="Enter user name"
+                      value={formData.user_name}
+                      onChange={(e) => setFormData({ ...formData, user_name: capitalizeFirst(e.target.value) })}
+                      required
+                    />
+                  </div>
+                  <div className="form-row">
+                    <label>Contact Number <span className="required">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="Enter contact number"
+                      value={formData.contact_number}
+                      onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })}
+                      required
+                    />
+                  </div>
+                </>
+              )}
+
+              {selectedRole === "Pilot" && (
+                <>
+                  <div className="form-row">
+                    <label>Client Name <span className="required">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="Enter client name"
+                      value={formData.client_name}
+                      onChange={(e) => setFormData({ ...formData, client_name: capitalizeFirst(e.target.value) })}
+                      required
+                    />
+                  </div>
+                  <div className="form-row">
+                    <label>Pilot Name <span className="required">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="Enter pilot name"
+                      value={formData.pilot_name}
+                      onChange={(e) => setFormData({ ...formData, pilot_name: capitalizeFirst(e.target.value) })}
+                      required
+                    />
+                  </div>
+                  <div className="form-row">
+                    <label>Drone Category <span className="required">*</span></label>
+                    <select
+                      value={formData.drone_category}
+                      onChange={(e) => setFormData({ ...formData, drone_category: e.target.value, small_license_id: "", medium_license_id: "" })}
+                      required
+                    >
+                      <option value="">Select Drone Category</option>
+                      <option value="Small">Small</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Hybrid">Hybrid</option>
+                    </select>
+                  </div>
+
+                  {formData.drone_category === "Small" && (
+                    <div className="form-row">
+                      <label>Enter Small License ID <span className="required">*</span></label>
+                      <input
+                        type="text"
+                        placeholder="Enter small license ID"
+                        value={formData.small_license_id}
+                        onChange={(e) => setFormData({ ...formData, small_license_id: e.target.value })}
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {formData.drone_category === "Medium" && (
+                    <div className="form-row">
+                      <label>Enter Medium License ID <span className="required">*</span></label>
+                      <input
+                        type="text"
+                        placeholder="Enter medium license ID"
+                        value={formData.medium_license_id}
+                        onChange={(e) => setFormData({ ...formData, medium_license_id: e.target.value })}
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {formData.drone_category === "Hybrid" && (
+                    <>
+                      <div className="form-row">
+                        <label>Enter Small License ID <span className="required">*</span></label>
+                        <input
+                          type="text"
+                          placeholder="Enter small license ID"
+                          value={formData.small_license_id}
+                          onChange={(e) => setFormData({ ...formData, small_license_id: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="form-row">
+                        <label>Enter Medium License ID <span className="required">*</span></label>
+                        <input
+                          type="text"
+                          placeholder="Enter medium license ID"
+                          value={formData.medium_license_id}
+                          onChange={(e) => setFormData({ ...formData, medium_license_id: e.target.value })}
+                          required
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <div className="form-row">
+                    <label>License Number <span className="required">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="Enter license number"
+                      value={formData.license_number}
+                      onChange={(e) => setFormData({ ...formData, license_number: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-row">
+                    <label>Contact Number <span className="required">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="Enter contact number"
+                      value={formData.contact_number}
+                      onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })}
+                      required
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="form-row">
+                <label>Email <span className="required">*</span></label>
+                <input
+                  type="email"
+                  placeholder="email@example.com"
+                  value={formData.email_id}
+                  onChange={(e) => setFormData({ ...formData, email_id: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-row">
+                <label>Password <span className="required">*</span></label>
+                <div className="password-input-container">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    required
+                  />
+                  <span className="eye-toggle" onClick={() => setShowPassword((prev) => !prev)}>
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </span>
+                </div>
+              </div>
+
+              <button type="submit" className="btn-confirm-blue">SUBMIT</button>
+            </form>
           </div>
         </div>
       )}
 
-      {/* DETAIL DRAWER */}
       {selectedAdmin && (
         <div className="detail-drawer open">
           <div className="drawer-header">
-              <h2>USER DETAILS</h2>
-              <button onClick={() => setSelectedAdmin(null)} className="btn-close-modal"><X /></button>
+            <h2>USER DETAILS</h2>
+            <button onClick={() => setSelectedAdmin(null)} className="btn-close-modal"><X /></button>
           </div>
           <div className="drawer-body">
-              <div className="profile-avatar">
-                {selectedAdmin.name.charAt(0)}
-              </div>
-              <h3>{selectedAdmin.name}</h3>
-              <p style={{ color: '#a1a1aa' }}>{selectedAdmin.email}</p>
-              <div className="drawer-divider" />
-              <div className="drawer-item"><span>Role: </span><strong>{selectedAdmin.role}</strong></div>
-              <div className="drawer-item"><span>Code: </span><strong>{selectedAdmin.id}</strong></div>
+            <div className="profile-avatar">{selectedAdmin.name.charAt(0)}</div>
+            <h3>{selectedAdmin.name}</h3>
+            <p style={{ color: "#a1a1aa" }}>{selectedAdmin.email}</p>
+            <div className="drawer-divider" />
+            <div className="drawer-item"><span>Role: </span><strong>{selectedAdmin.role}</strong></div>
+            <div className="drawer-item"><span>Code: </span><strong>{selectedAdmin.id}</strong></div>
           </div>
         </div>
       )}

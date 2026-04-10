@@ -235,8 +235,10 @@ window.location.reload();
     <>
       <div className="upload-overlay">
         <div className="upload-container">
-          <button className="close-btn" onClick={onClose}>✕</button>
-          <h1 className="title">Welcome!</h1>
+          <div className="upload-header-row">
+            <h1 className="title">Welcome!</h1>
+            <button className="close-btn" onClick={onClose}>✕</button>
+          </div>
           <p className="subtitle">Fill in the required information below:</p>
 
           <div className="form-grid">

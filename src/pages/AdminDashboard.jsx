@@ -147,6 +147,7 @@ const AdminDashboard = () => {
   };
 
   const handleIndustryClick = async (industry) => {
+    setSearchTerm("");
     setLoadingReport(true);
     try {
       const matched = reportIndustries.find(r => r.name.toLowerCase().trim() === industry.name.toLowerCase().trim());
@@ -255,7 +256,7 @@ const AdminDashboard = () => {
     console.log("Registration submit called for role:", selectedRegistrationRole);
     
     const requiredFields = ["clientName", "email", "password"];
-    if (selectedRegistrationRole === "User") requiredFields.push("userName");
+    if (selectedRegistrationRole === "User") requiredFields.push("userName", "contactNumber");
     if (selectedRegistrationRole === "Pilot") requiredFields.push("pilotName", "contactNumber", "licenseNumber");
 
     const missing = requiredFields.filter((field) => !registrationData[field]?.trim());
@@ -381,24 +382,47 @@ const AdminDashboard = () => {
   };
 
   const handleRecentProjectClick = async (p) => {
+    setSearchTerm("");
     setLoadingReport(true);
     try {
       const clickedName = (p.project_name || p.name || "").toLowerCase().trim();
       const clickedId = p._id || p.id;
       const targetIndId = p.industryId || p.industry_id;
       let industryMatch = reportIndustries.find(ind => ind.id === targetIndId);
-      if (!industryMatch) industryMatch = reportIndustries.find(ind => (ind.name || "").toLowerCase() === clickedName.split(' ').slice(0, 2).join(' '));
-      if (!industryMatch) throw new Error("Industry not found. Please refresh and try again.");
+      if (!industryMatch) {
+        // Try exact match first
+        industryMatch = reportIndustries.find(ind =>
+          normalize(ind.name) === normalize(clickedName.split(' ')[0])
+        );
+      }
+      if (!industryMatch && reportIndustries.length > 0) {
+        // Fall back to first industry if all else fails
+        industryMatch = reportIndustries[0];
+      }
+      if (!industryMatch) throw new Error("No industries available. Please refresh and try again.");
       const res = await apiFetch(`/reports/?industry_id=${industryMatch.id}`);
       if (!res.ok) throw new Error("Failed to fetch projects from API");
       const apiData = await res.json();
-      const apiProjects = apiData.projects || [];
-      const officialProject = apiProjects.find(proj => {
-        const projName = (proj.project_name || proj.name || "").toLowerCase().trim();
+      const apiProjects = apiData.projects || []; 
+      
+      let officialProject = null;
+      // Try exact ID match first
+      officialProject = apiProjects.find(proj => {
         const projId = proj._id || proj.id;
-        return projId === clickedId || projName === clickedName || projName.includes(clickedName) || clickedName.includes(projName);
+        return projId === clickedId;
       });
-      if (!officialProject) throw new Error("Could not find this project. Please try again.");
+      // Try name matching
+      if (!officialProject) {
+        officialProject = apiProjects.find(proj => {
+          const projName = (proj.project_name || proj.name || "").toLowerCase().trim();
+          return projName === clickedName || projName.includes(clickedName) || clickedName.includes(projName);
+        });
+      }
+      if (!officialProject && apiProjects.length > 0) {
+        // If still no match, use first project as fallback
+        officialProject = apiProjects[0];
+      }
+      if (!officialProject) throw new Error("No projects found in this industry.");
       setSelectedIndustry({ name: industryMatch.name, mongoId: industryMatch.id, id: industryMatch.id });
       setSelectedProject({ ...officialProject, id: officialProject._id || officialProject.id });
       const projectIdentifier = officialProject.project_code || officialProject.code || (officialProject._id || officialProject.id);
@@ -528,6 +552,7 @@ const AdminDashboard = () => {
           )}
         </div>
       </div>
+      {(!searchTerm || filteredIndustries.length > 0) && (
       <div className="project-management-wrapper">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
           <h2 className="section-title" style={{ margin: 0 }}>Industries</h2>
@@ -540,7 +565,7 @@ const AdminDashboard = () => {
         </div>
         <div className="slider-viewport">
           <div className="industry-grid-page">
-            {filteredIndustries.slice(industryPage * 6, industryPage * 6 + 6).map((ind) => (
+            {filteredIndustries.length > 0 && filteredIndustries.slice(industryPage * 6, industryPage * 6 + 6).map((ind) => (
               <div key={ind.id} className="industry-card" onClick={() => handleIndustryClick(ind)}>
                 <img src={ind.img || ind.image_url || DEFAULT_PROJECT_IMG} alt={ind.name} className="industry-image" />
                 <div className="industry-overlay"><div className="industry-name">{ind.name}</div></div>
@@ -549,10 +574,12 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div>
+      )}
+      {(!searchTerm || filteredRecentProjects.length > 0) && (
       <div className="project-management-wrapper">
         <h2 className="section-title">Recent Projects</h2>
         <div className="industry-grid-page">
-          {filteredRecentProjects.map((p) => (
+          {filteredRecentProjects.length > 0 && filteredRecentProjects.map((p) => (
             <div key={p.id || p._id} className="industry-card" onClick={() => handleRecentProjectClick(p)} style={{ cursor: 'pointer' }}>
               <img src={getProjectImage(p)} alt={p.project_name || p.name} className="industry-image" />
               <div className="industry-overlay"><div className="industry-name">{p.project_name || p.name}</div></div>
@@ -560,6 +587,7 @@ const AdminDashboard = () => {
           ))}
         </div>
       </div>
+      )}
     </div>
   );
 
@@ -638,6 +666,7 @@ const AdminDashboard = () => {
   />
 </div>
               {selectedRegistrationRole === "User" && (
+                <>
                 <div className="form-row">
   <label>User Name <span className="required">*</span></label>
   <input
@@ -653,6 +682,22 @@ const AdminDashboard = () => {
     required
   />
 </div>
+                <div className="form-row">
+  <label>Contact Number <span className="required">*</span></label>
+  <input
+    type="text"
+    value={registrationData.contactNumber}
+    onChange={(e) =>
+      setRegistrationData({
+        ...registrationData,
+        contactNumber: e.target.value
+      })
+    }
+    placeholder="Enter contact number"
+    required
+  />
+</div>
+                </>
               )}
               {selectedRegistrationRole === "Pilot" && (
                 <div className="form-row">

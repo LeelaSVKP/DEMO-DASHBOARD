@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Search,
-  Bell,
   AlertTriangle,
   CheckCircle,
   Clock,
@@ -15,7 +14,6 @@ import "./alerts.css";
 
 const BASE_URL = "https://api-db-67gt.onrender.com";
 
-/* --- CONFIGS --- */
 const severityConfig = {
   critical: { icon: AlertTriangle, bg: "sev-critical" },
   warning: { icon: AlertTriangle, bg: "sev-warning" },
@@ -23,25 +21,20 @@ const severityConfig = {
 };
 
 const statusConfig = {
-  active: { color: "dot-red", label: "Active" },
-  acknowledged: { color: "dot-yellow", label: "Acknowledged" },
-  resolved: { color: "dot-green", label: "Resolved" }
+  active: { dot: "status-dot-active", label: "Active" },
+  acknowledged: { dot: "status-dot-acknowledged", label: "Acknowledged" },
+  resolved: { dot: "status-dot-resolved", label: "Resolved" }
 };
 
 export default function Alerts() {
-
   const navigate = useNavigate();
 
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
-
   const [openMenuId, setOpenMenuId] = useState(null);
-
-  /* ================= FETCH ALERTS ================= */
 
   useEffect(() => {
     const fetchAlerts = async () => {
@@ -82,7 +75,6 @@ export default function Alerts() {
 
         setAlerts(formatted);
         setLoading(false);
-
       } catch (err) {
         console.error(err);
         setLoading(false);
@@ -91,8 +83,6 @@ export default function Alerts() {
 
     fetchAlerts();
   }, [navigate]);
-
-  /* ================= CLOSE MENU WHEN CLICK OUTSIDE ================= */
 
   useEffect(() => {
     const closeMenu = () => setOpenMenuId(null);
@@ -105,10 +95,7 @@ export default function Alerts() {
     setOpenMenuId(openMenuId === id ? null : id);
   };
 
-  /* ================= FILTER ================= */
-
   const filteredAlerts = alerts.filter((alert) => {
-
     const matchesSearch =
       alert.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       alert.description?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -122,19 +109,15 @@ export default function Alerts() {
     return matchesSearch && matchesStatus && matchesSeverity;
   });
 
-  if (loading)
-    return <div style={{ padding: 40 }}>Loading Alerts...</div>;
+  if (loading) return <div style={{ padding: 40 }}>Loading Alerts...</div>;
 
   return (
     <div className="alerts-page">
-
       <div className="alerts-header">
         <h1 className="page-title">System Alerts</h1>
       </div>
 
-      {/* FILTERS - UPDATED TO REMOVE CHEVRONDOWN */}
       <div className="filters-bar">
-
         <div className="search-wrapper">
           <Search className="search-icon" />
           <input
@@ -156,7 +139,6 @@ export default function Alerts() {
             <option value="acknowledged">Acknowledged</option>
             <option value="resolved">Resolved</option>
           </select>
-          {/* ChevronDown Removed */}
         </div>
 
         <div className="filter-select-wrapper">
@@ -170,12 +152,9 @@ export default function Alerts() {
             <option value="warning">Warning</option>
             <option value="info">Info</option>
           </select>
-          {/* ChevronDown Removed */}
         </div>
-
       </div>
 
-      {/* TABLE */}
       <div className="table-card">
         <div className="table-header">
           <h3 className="table-title">
@@ -200,68 +179,52 @@ export default function Alerts() {
           <tbody>
             {filteredAlerts.length > 0 ? (
               filteredAlerts.map((alert) => {
-
                 const sInfo = severityConfig[alert.severity] || severityConfig.info;
                 const stInfo = statusConfig[alert.status] || statusConfig.active;
                 const SIcon = sInfo.icon;
 
                 return (
                   <tr key={alert.id}>
-
                     <td>{alert.id}</td>
                     <td>{alert.description}</td>
-
                     <td>
                       <div className="flex-center">
-                        <Clock size={14} /> {alert.dateTime}
+                        <Clock size={18} color="#3b82f6" /> {alert.dateTime}
                       </div>
                     </td>
-
                     <td>{alert.project}</td>
                     <td>{alert.assignedTo}</td>
-
                     <td>
-                      <div className="flex-center">
-                        <span className={`status-dot ${stInfo.color}`}></span>
-                        {stInfo.label}
-                      </div>
+                      <span className="alert-status-inline">
+                        <span className={`alert-status-dot ${stInfo.dot}`}></span>
+                        <span>{stInfo.label}</span>
+                      </span>
                     </td>
-
                     <td>
                       <span className={`severity-badge ${sInfo.bg}`}>
                         <SIcon size={12} />
                         <span>{alert.severity}</span>
                       </span>
                     </td>
-
                     <td style={{ textAlign: "right", position: "relative" }}>
-                      <button
-                        className="btn-icon"
-                        onClick={(e) => toggleMenu(e, alert.id)}
-                      >
+                      <button className="btn-icon" onClick={(e) => toggleMenu(e, alert.id)}>
                         <MoreHorizontal size={16} />
                       </button>
 
                       {openMenuId === alert.id && (
-                        <div
-                          className="menu-dropdown"
-                          onClick={(e) => e.stopPropagation()}
-                        >
+                        <div className="menu-dropdown" onClick={(e) => e.stopPropagation()}>
                           <button className="menu-item">
                             <Eye size={14} /> View Details
                           </button>
-
                           <button className="menu-item">
                             <CheckCircle size={14} /> Acknowledge
                           </button>
-
                           <button className="menu-item">
                             <X size={14} /> Resolve
                           </button>
                         </div>
                       )}
                     </td>
-
                   </tr>
                 );
               })
@@ -273,10 +236,8 @@ export default function Alerts() {
               </tr>
             )}
           </tbody>
-
         </table>
       </div>
-
     </div>
   );
 }

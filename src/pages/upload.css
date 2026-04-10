@@ -89,6 +89,18 @@ h3,
   margin: 0 0 10px 0;
 }
 
+.upload-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.upload-header-row .title {
+  margin: 0;
+  flex: 1;
+}
+
 .subtitle {
   color: var(--text-muted);
   margin-bottom: 30px;
@@ -182,9 +194,6 @@ input::placeholder {
 .modal-close-x,
 .red-close-x,
 .inline-card-header button {
-  position: absolute;
-  top: 20px;
-  right: 20px;
   background: var(--red) !important;
   color: var(--white) !important;
   border: none;
@@ -197,6 +206,7 @@ input::placeholder {
   justify-content: center;
   z-index: 10;
   font-weight: bold;
+  flex-shrink: 0;
 }
 
 /* Submit & Action Buttons (Pure White with Black Text) */
@@ -242,6 +252,24 @@ input::placeholder {
 
 
 /* --- INLINE CARD SPECIFICS --- */
+.upload-header-row,
+.card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.upload-header-row .title {
+  margin: 0;
+  flex: 1;
+}
+
+.card-header-row h3 {
+  margin: 0;
+  flex: 1;
+}
+
 .inline-card-header {
   display: flex;
   justify-content: space-between;
