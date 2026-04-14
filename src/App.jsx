@@ -110,6 +110,10 @@ export default function App() {
             path="/super-login" 
             element={user ? <Navigate to={getLandingPage()} replace /> : <SuperAdminLogin setUser={setUser} />} 
           />
+          <Route 
+            path="/superadmin-login" 
+            element={<Navigate to="/super-login" replace />} 
+          />
 
           {/* DASHBOARD ROUTES */}
           <Route

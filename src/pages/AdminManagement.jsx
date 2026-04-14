@@ -51,6 +51,24 @@ export default function AdminManagement() {
     return value.charAt(0).toUpperCase() + value.slice(1);
   };
 
+  const normalizeAdminRecord = (item, index) => ({
+    rowKey: item._id || `${item.client_code || "NA"}-${item.role || "unknown"}-${index}`,
+    id: item._id || `${item.client_code || "NA"}-${item.role || "unknown"}-${index}`,
+    client_code: item.client_code || "N/A",
+    name:
+      item.role === "admin"
+        ? item.admin_name || item.client_name || "Unknown"
+        : item.role === "user"
+        ? item.user_name || item.client_name || "Unknown"
+        : item.role === "pilot"
+        ? item.pilot_name || item.client_name || "Unknown"
+        : item.client_name || "Unknown",
+    email: item.email_id || "N/A",
+    role: item.role ? item.role.charAt(0).toUpperCase() + item.role.slice(1) : "User",
+    status: item.status || "Active",
+    created_at: item.created_at ? new Date(item.created_at).toLocaleDateString() : "N/A"
+  });
+
   const getStatusMeta = (status) => {
     const normalized = status?.toLowerCase() || "active";
 
@@ -95,14 +113,9 @@ export default function AdminManagement() {
         const adminData = await adminRes.json();
         const projectData = await projectRes.json();
 
-        const normalizedAdmins = adminData.map((item) => ({
-          id: item.client_code || item._id,
-          name: item.client_name || "Unknown",
-          email: item.email_id || "N/A",
-          role: item.role ? item.role.charAt(0).toUpperCase() + item.role.slice(1) : "User",
-          status: item.status || "Active",
-          created_at: item.created_at ? new Date(item.created_at).toLocaleDateString() : "N/A"
-        }));
+        const normalizedAdmins = Array.isArray(adminData)
+          ? adminData.map((item, index) => normalizeAdminRecord(item, index))
+          : [];
 
         const normalizedProjects = projectData.map((p) => ({
           id: p.project_code || p._id || p.id,
@@ -161,7 +174,7 @@ export default function AdminManagement() {
       let successMessage = "";
 
       if (selectedRole === "Admin") {
-        endpoint = `${BASE_URL}/admins/register`;
+        endpoint = `${BASE_URL}/register/admin/`;
         payload = {
           name: formData.client_name,
           email: formData.email_id,
@@ -171,7 +184,7 @@ export default function AdminManagement() {
         };
         successMessage = "Admin registered successfully";
       } else if (selectedRole === "User") {
-        endpoint = `${BASE_URL}/users/register`;
+        endpoint = `${BASE_URL}/users/superadmin/register-user`;
         payload = {
           client_name: formData.client_name,
           user_name: formData.user_name,
@@ -238,14 +251,9 @@ export default function AdminManagement() {
           });
           if (adminRes.ok) {
             const adminData = await adminRes.json();
-            const normalizedAdmins = adminData.map((item) => ({
-              id: item.client_code || item._id,
-              name: item.client_name || "Unknown",
-              email: item.email_id || "N/A",
-              role: item.role ? item.role.charAt(0).toUpperCase() + item.role.slice(1) : "User",
-              status: item.status || "Active",
-              created_at: item.created_at ? new Date(item.created_at).toLocaleDateString() : "N/A"
-            }));
+            const normalizedAdmins = Array.isArray(adminData)
+              ? adminData.map((item, index) => normalizeAdminRecord(item, index))
+              : [];
             setAdmins(normalizedAdmins);
           }
         } else {
@@ -276,7 +284,9 @@ export default function AdminManagement() {
       const matchesSearch =
         a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         a.email.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesRole = roleFilter === "All" || a.role === roleFilter;
+      const matchesRole =
+        roleFilter === "All" ||
+        a.role.toLowerCase() === roleFilter.toLowerCase();
       return matchesSearch && matchesRole;
     });
   }, [admins, searchTerm, roleFilter]);
@@ -348,9 +358,9 @@ export default function AdminManagement() {
               const StatusIcon = statusMeta.icon;
 
               return (
-                <tr key={admin.id}>
+                <tr key={admin.rowKey}>
                   <td>{admin.name}</td>
-                  <td>{admin.id}</td>
+                  <td>{admin.client_code || admin.id}</td>
                   <td>{admin.email}</td>
                   <td><span className={`role-badge ${admin.role.toLowerCase()}`}>{admin.role}</span></td>
                   <td>
@@ -602,7 +612,7 @@ export default function AdminManagement() {
             <p style={{ color: "#a1a1aa" }}>{selectedAdmin.email}</p>
             <div className="drawer-divider" />
             <div className="drawer-item"><span>Role: </span><strong>{selectedAdmin.role}</strong></div>
-            <div className="drawer-item"><span>Code: </span><strong>{selectedAdmin.id}</strong></div>
+            <div className="drawer-item"><span>Code: </span><strong>{selectedAdmin.client_code || selectedAdmin.id}</strong></div>
           </div>
         </div>
       )}

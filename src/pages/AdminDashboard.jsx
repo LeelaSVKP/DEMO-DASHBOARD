@@ -285,7 +285,7 @@ const AdminDashboard = () => {
       }
       // Handle User registration via API
       else if (selectedRegistrationRole === "User") {
-        endpoint = `${BASE_URL}/users/register`;
+        endpoint = `${BASE_URL}/users/admin/register-user`;
         payload = {
           client_name: registrationData.clientName,
           user_name: registrationData.userName,
